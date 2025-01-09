@@ -13,6 +13,7 @@ import (
 	"bugtracker-backend/internal/handlers"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -28,10 +29,18 @@ func main() {
 	// Register routes
 	handlers.RegisterRoutes(r)
 
-	// Create server
+	// Create a CORS middleware
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://localhost:3000"}, // Update this with your frontend URL
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders: []string{"Content-Type", "Authorization"},
+		Debug:          true, // Set to false in production
+	})
+
+	// Create server with CORS-enabled handler
 	srv := &http.Server{
 		Addr:    ":8080",
-		Handler: r,
+		Handler: c.Handler(r),
 	}
 
 	// Channel to listen for errors coming from the listener
@@ -62,9 +71,6 @@ func main() {
 		// Asking listener to shut down and shed load
 		if err := srv.Shutdown(ctx); err != nil {
 			log.Printf("Graceful shutdown did not complete in %v: %v", 10*time.Second, err)
-			if err := srv.Close(); err != nil {
-				log.Fatalf("Could not stop server gracefully: %v", err)
-			}
 		} else {
 			log.Println("Server shut down gracefully.")
 		}
