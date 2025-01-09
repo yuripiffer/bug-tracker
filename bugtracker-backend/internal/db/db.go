@@ -6,12 +6,13 @@ import (
 	"log"
 
 	"bugtracker-backend/internal/models"
+
 	"go.etcd.io/bbolt"
 )
 
 var (
-	database    *bbolt.DB
-	bugsBucket  = []byte("bugs")
+	database     *bbolt.DB
+	bugsBucket   = []byte("bugs")
 	databasePath = "bugs.db" // Ensure this path is correct
 )
 
@@ -100,6 +101,17 @@ func GetAllBugs() ([]*models.Bug, error) {
 	}
 
 	return bugs, nil
+}
+
+// DeleteBug removes a bug from the database by its ID
+func DeleteBug(id string) error {
+	return database.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket(bugsBucket)
+		if b == nil {
+			return fmt.Errorf("bucket not found")
+		}
+		return b.Delete([]byte(id))
+	})
 }
 
 // Cleanup closes the database

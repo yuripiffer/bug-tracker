@@ -11,6 +11,7 @@ import (
 
 	"bugtracker-backend/internal/db"
 	"bugtracker-backend/internal/handlers"
+
 	"github.com/gorilla/mux"
 )
 
@@ -68,4 +69,4 @@ func main() {
 			log.Println("Server shut down gracefully.")
 		}
 	}
-} 
+}

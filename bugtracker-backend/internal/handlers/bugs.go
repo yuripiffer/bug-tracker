@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	
+
 	"bugtracker-backend/internal/db"
 	"bugtracker-backend/internal/models"
 )
@@ -69,7 +69,7 @@ func GetBugHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(bug)
-} 
+}
 
 // UpdateBugHandler updates an existing bug
 func UpdateBugHandler(w http.ResponseWriter, r *http.Request) {
@@ -110,12 +110,7 @@ func DeleteBugHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	err := database.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket(bugsBucket)
-		return b.Delete([]byte(id))
-	})
-
-	if err != nil {
+	if err := db.DeleteBug(id); err != nil {
 		http.Error(w, "Failed to delete bug", http.StatusInternalServerError)
 		return
 	}
