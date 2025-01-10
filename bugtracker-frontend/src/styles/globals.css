@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Add these custom duration classes */
+.duration-2000 {
+  transition-duration: 2000ms;
+}
