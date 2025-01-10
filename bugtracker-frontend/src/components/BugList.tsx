@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getBugs, createBug } from '../api/bugs';
 import AddBugModal from './AddBugModal';
 import DeleteBugButton from './DeleteBugButton';
+import LoadingScreen from './LoadingScreen';
 import { Bug } from '../types/bug';
 import Link from 'next/link';
 
@@ -10,6 +11,8 @@ const BugList: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [showLoadingScreen, setShowLoadingScreen] = useState(true);
+    const [fadeIn, setFadeIn] = useState(false);
 
     useEffect(() => {
         const fetchBugs = async () => {
@@ -26,6 +29,11 @@ const BugList: React.FC = () => {
 
         fetchBugs();
     }, []);
+
+    const handleLoadingComplete = () => {
+        setShowLoadingScreen(false);
+        setFadeIn(true);
+    };
 
     const handleAddBug = async (newBug: Omit<Bug, 'id' | 'status'>) => {
         try {
@@ -48,11 +56,15 @@ const BugList: React.FC = () => {
         }
     };
 
+    if (showLoadingScreen) {
+        return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
+    }
+
     if (loading) return <div className="text-center p-4">Loading...</div>;
     if (error) return <div className="text-center p-4 text-red-500">Error: {error}</div>;
 
     return (
-        <div className="min-h-screen bg-gray-100">
+        <div className={`min-h-screen bg-gray-100 transition-opacity duration-2000 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}>
             <nav className="bg-white shadow-lg">
                 <div className="max-w-7xl mx-auto px-4 py-4">
                     <h1 className="text-2xl font-bold text-gray-800">Bug Tracker</h1>
