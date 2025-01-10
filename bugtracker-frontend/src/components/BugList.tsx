@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { getBugs, createBug } from '../api/bugs';
 import AddBugModal from './AddBugModal';
+import DeleteBugButton from './DeleteBugButton';
 import { Bug } from '../types/bug';
+import Link from 'next/link';
 
 const BugList: React.FC = () => {
     const [bugs, setBugs] = useState<Bug[]>([]);
@@ -33,6 +35,16 @@ const BugList: React.FC = () => {
             setIsModalOpen(false);
         } catch (error) {
             console.error('Failed to create bug:', error);
+        }
+    };
+
+    const handleBugDeleted = async () => {
+        try {
+            const updatedBugs = await getBugs();
+            setBugs(updatedBugs);
+        } catch (error) {
+            console.error('Error refreshing bugs:', error);
+            setError('Failed to refresh bugs');
         }
     };
 
@@ -70,10 +82,18 @@ const BugList: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {bugs.map((bug) => (
+                            {(bugs || []).map((bug) => (
                                 <tr key={bug.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{bug.id}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{bug.title}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <Link href={`/bugs/${bug.id}`} className="text-blue-600 hover:text-blue-900">
+                                            {bug.id}
+                                        </Link>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <Link href={`/bugs/${bug.id}`} className="text-blue-600 hover:text-blue-900">
+                                            {bug.title}
+                                        </Link>
+                                    </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                             ${bug.status === 'Open' ? 'bg-red-100 text-red-800' : 
@@ -92,7 +112,10 @@ const BugList: React.FC = () => {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <button className="text-blue-600 hover:text-blue-900 mr-4">Edit</button>
-                                        <button className="text-red-600 hover:text-red-900">Delete</button>
+                                        <DeleteBugButton 
+                                            bugId={bug.id}
+                                            onDelete={handleBugDeleted}
+                                        />
                                     </td>
                                 </tr>
                             ))}

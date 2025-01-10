@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"strconv"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 
 	"bugtracker-backend/internal/db"
@@ -18,17 +19,18 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/api/bugs/{id}", GetBugHandler).Methods("GET")
 	r.HandleFunc("/api/bugs/{id}", UpdateBugHandler).Methods("PUT")
 	r.HandleFunc("/api/bugs/{id}", DeleteBugHandler).Methods("DELETE")
+	RegisterCommentRoutes(r)
 }
 
 func CreateBugHandler(w http.ResponseWriter, r *http.Request) {
 	var req models.CreateBugRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("Failed to decode create bug request: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	bug := &models.Bug{
-		ID:          uuid.New().String(),
 		Title:       req.Title,
 		Description: req.Description,
 		Status:      req.Status,
@@ -38,10 +40,12 @@ func CreateBugHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := db.CreateBug(bug); err != nil {
+		log.Printf("Failed to create bug with ID %d: %v", bug.ID, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	log.Printf("Successfully created bug with ID: %d", bug.ID)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(bug)
 }
@@ -61,7 +65,13 @@ func GetBugHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	bug, err := db.GetBug(id)
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		http.Error(w, "Invalid ID format", http.StatusBadRequest)
+		return
+	}
+
+	bug, err := db.GetBug(idInt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -76,6 +86,13 @@ func UpdateBugHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
+	// Convert string ID to int
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		http.Error(w, "Invalid ID format", http.StatusBadRequest)
+		return
+	}
+
 	var req models.CreateBugRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -83,7 +100,7 @@ func UpdateBugHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Retrieve existing bug
-	bug, err := db.GetBug(id)
+	bug, err := db.GetBug(idInt)
 	if err != nil {
 		http.Error(w, "Bug not found", http.StatusNotFound)
 		return
@@ -110,10 +127,20 @@ func DeleteBugHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	if err := db.DeleteBug(id); err != nil {
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		http.Error(w, "Invalid ID format", http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("Attempting to delete bug with ID: %d", idInt)
+
+	if err := db.DeleteBug(idInt); err != nil {
+		log.Printf("Failed to delete bug with ID %d: %v", idInt, err)
 		http.Error(w, "Failed to delete bug", http.StatusInternalServerError)
 		return
 	}
 
+	log.Printf("Successfully deleted bug with ID: %d", idInt)
 	w.WriteHeader(http.StatusNoContent)
 }

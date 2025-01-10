@@ -17,6 +17,12 @@ import (
 )
 
 func main() {
+	// Add this line at the start of main to configure logging
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
+	// Add a test log to verify logging is working
+	log.Println("Starting Bug Tracker backend server...")
+
 	// Initialize the database
 	if err := db.Init(); err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
