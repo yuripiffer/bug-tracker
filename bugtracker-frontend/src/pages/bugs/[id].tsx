@@ -4,6 +4,10 @@ import { Bug } from '@/types/bug';
 import Link from 'next/link';
 import CommentSection from '@/components/CommentSection';
 import { Comment } from '@/types/comment';
+import EditBugModal from '@/components/EditBugModal';
+import { updateBug } from '@/api/bugs';
+import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
+import { deleteBug } from '@/api/bugs';
 
 export default function BugDetail() {
     const router = useRouter();
@@ -12,6 +16,8 @@ export default function BugDetail() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [comments, setComments] = useState<Comment[]>([]);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
     const fetchComments = useCallback(async () => {
         try {
@@ -49,6 +55,36 @@ export default function BugDetail() {
         fetchData();
     }, [id, fetchComments]);
 
+    const handleEditBug = async (bugId: number, updatedBug: Partial<Bug>) => {
+        try {
+            await updateBug(bugId.toString(), updatedBug);
+            const response = await fetch(`http://localhost:8080/api/bugs/${id}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch updated bug');
+            }
+            const data = await response.json();
+            setBug(data);
+            setIsEditModalOpen(false);
+        } catch (error) {
+            console.error('Failed to update bug:', error);
+        }
+    };
+
+    const handleDelete = async () => {
+        try {
+            await deleteBug(bug!.id.toString());
+            router.push({
+                pathname: '/',
+                query: { 
+                    deletedBugTitle: bug!.title,
+                    showDeleteNotification: true
+                }
+            });
+        } catch (error) {
+            console.error('Error deleting bug:', error);
+        }
+    };
+
     if (loading) return <div className="text-center p-4">Loading...</div>;
     if (error) return <div className="text-center p-4 text-red-500">Error: {error}</div>;
     if (!bug) return <div className="text-center p-4">Bug not found</div>;
@@ -65,7 +101,23 @@ export default function BugDetail() {
 
             <main className="max-w-7xl mx-auto px-4 py-8">
                 <div className="bg-white shadow-md rounded-lg p-6">
-                    <h1 className="text-2xl font-bold mb-4">{bug.title}</h1>
+                    <div className="flex justify-between items-center mb-4">
+                        <h1 className="text-2xl font-bold">{bug.title}</h1>
+                        <div className="flex gap-4">
+                            <button
+                                onClick={() => setIsEditModalOpen(true)}
+                                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                            >
+                                Edit Bug
+                            </button>
+                            <button
+                                onClick={() => setIsDeleteModalOpen(true)}
+                                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+                            >
+                                Delete Bug
+                            </button>
+                        </div>
+                    </div>
                     
                     <div className="grid grid-cols-2 gap-4 mb-6">
                         <div>
@@ -102,6 +154,24 @@ export default function BugDetail() {
                         comments={comments}
                         onCommentAdded={fetchComments}
                     />
+
+                    {bug && (
+                        <EditBugModal 
+                            isOpen={isEditModalOpen}
+                            onClose={() => setIsEditModalOpen(false)}
+                            onSubmit={handleEditBug}
+                            bug={bug}
+                        />
+                    )}
+
+                    {bug && (
+                        <DeleteConfirmationModal
+                            isOpen={isDeleteModalOpen}
+                            onClose={() => setIsDeleteModalOpen(false)}
+                            onConfirm={handleDelete}
+                            bugTitle={bug.title}
+                        />
+                    )}
                 </div>
             </main>
         </div>

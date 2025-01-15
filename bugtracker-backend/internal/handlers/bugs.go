@@ -100,26 +100,26 @@ func UpdateBugHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Retrieve existing bug
-	bug, err := db.GetBug(idInt)
+	existingBug, err := db.GetBug(idInt)
 	if err != nil {
 		http.Error(w, "Bug not found", http.StatusNotFound)
 		return
 	}
 
 	// Update fields
-	bug.Title = req.Title
-	bug.Description = req.Description
-	bug.Status = req.Status
-	bug.Priority = req.Priority
+	existingBug.Title = req.Title
+	existingBug.Description = req.Description
+	existingBug.Status = req.Status
+	existingBug.Priority = req.Priority
 
-	// Save updated bug
-	if err := db.CreateBug(bug); err != nil { // Reuse CreateBug for simplicity
+	// Use UpdateBug instead of CreateBug
+	if err := db.UpdateBug(existingBug); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(bug)
+	json.NewEncoder(w).Encode(existingBug)
 }
 
 // DeleteBugHandler deletes a bug by its ID
