@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"bugtracker-backend/internal/models"
 
@@ -179,4 +180,28 @@ func itob(v int) []byte {
 
 func btoi(b []byte) int {
 	return int(binary.BigEndian.Uint64(b))
+}
+
+func UpdateBug(bug *models.Bug) error {
+	return database.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket(bugsBucket)
+
+		// Check if bug exists
+		existing := b.Get(itob(bug.ID))
+		if existing == nil {
+			return fmt.Errorf("bug not found")
+		}
+
+		// Update the timestamps
+		bug.UpdatedAt = time.Now()
+
+		// Serialize the bug to JSON
+		encoded, err := json.Marshal(bug)
+		if err != nil {
+			return fmt.Errorf("failed to marshal bug: %w", err)
+		}
+
+		// Update the bug with its ID as the key
+		return b.Put(itob(bug.ID), encoded)
+	})
 }

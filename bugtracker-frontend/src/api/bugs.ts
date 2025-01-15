@@ -63,7 +63,7 @@ export const deleteBug = async (id: string) => {
         if (!response.ok) {
             throw new Error('Failed to delete bug');
         }
-        return await response.json();
+        return;
     } catch (error) {
         console.error('Error deleting bug:', error);
         throw error;

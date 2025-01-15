@@ -1,18 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { getBugs, createBug } from '../api/bugs';
+import { getBugs, createBug, updateBug, deleteBug } from '../api/bugs';
 import AddBugModal from './AddBugModal';
-import DeleteBugButton from './DeleteBugButton';
 import LoadingScreen from './LoadingScreen';
 import { Bug } from '../types/bug';
 import Link from 'next/link';
+import EditBugModal from './EditBugModal';
+import { useRouter } from 'next/router';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
+import Notification from './Notification';
 
 const BugList: React.FC = () => {
+    const router = useRouter();
+    const { query, pathname, replace } = router;
     const [bugs, setBugs] = useState<Bug[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [showLoadingScreen, setShowLoadingScreen] = useState(true);
     const [fadeIn, setFadeIn] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedBug, setSelectedBug] = useState<Bug | null>(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [bugToDelete, setBugToDelete] = useState<Bug | null>(null);
 
     useEffect(() => {
         const fetchBugs = async () => {
@@ -37,22 +46,64 @@ const BugList: React.FC = () => {
 
     const handleAddBug = async (newBug: Omit<Bug, 'id' | 'status'>) => {
         try {
-            await createBug({ ...newBug, status: 'Open' });
+            const createdBug = await createBug({ ...newBug, status: 'Open' });
             const updatedBugs = await getBugs();
             setBugs(updatedBugs);
             setIsModalOpen(false);
+            
+            replace({
+                pathname,
+                query: { 
+                    createdBugTitle: createdBug.title,
+                    showCreateNotification: true
+                }
+            });
         } catch (error) {
             console.error('Failed to create bug:', error);
         }
     };
 
-    const handleBugDeleted = async () => {
+    const handleEditClick = (bug: Bug) => {
+        setSelectedBug(bug);
+        setIsEditModalOpen(true);
+    };
+
+    const handleEditBug = async (bugId: number, updatedBug: Partial<Bug>) => {
         try {
+            await updateBug(bugId.toString(), updatedBug);
             const updatedBugs = await getBugs();
             setBugs(updatedBugs);
+            setIsEditModalOpen(false);
+            setSelectedBug(null);
         } catch (error) {
-            console.error('Error refreshing bugs:', error);
-            setError('Failed to refresh bugs');
+            console.error('Failed to update bug:', error);
+        }
+    };
+
+    const handleDeleteClick = (bug: Bug) => {
+        setBugToDelete(bug);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!bugToDelete) return;
+
+        try {
+            await deleteBug(bugToDelete.id.toString());
+            const updatedBugs = await getBugs();
+            setBugs(updatedBugs);
+            setIsDeleteModalOpen(false);
+            setBugToDelete(null);
+            
+            replace({
+                pathname,
+                query: { 
+                    deletedBugTitle: bugToDelete.title,
+                    showDeleteNotification: true
+                }
+            });
+        } catch (error) {
+            console.error('Failed to delete bug:', error);
         }
     };
 
@@ -70,6 +121,32 @@ const BugList: React.FC = () => {
                     <h1 className="text-2xl font-bold text-gray-800">Bug Tracker</h1>
                 </div>
             </nav>
+
+            {query.showDeleteNotification && (
+                <Notification
+                    message={`Successfully deleted bug "${query.deletedBugTitle}"`}
+                    onClose={() => {
+                        replace({
+                            pathname,
+                            query: {}
+                        });
+                    }}
+                    type="success"
+                />
+            )}
+
+            {query.showCreateNotification && (
+                <Notification
+                    message={`Successfully created bug "${query.createdBugTitle}"`}
+                    onClose={() => {
+                        replace({
+                            pathname,
+                            query: {}
+                        });
+                    }}
+                    type="success"
+                />
+            )}
 
             <main className="max-w-7xl mx-auto px-4 py-8">
                 <div className="flex justify-between items-center mb-6">
@@ -123,11 +200,18 @@ const BugList: React.FC = () => {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button className="text-blue-600 hover:text-blue-900 mr-4">Edit</button>
-                                        <DeleteBugButton 
-                                            bugId={bug.id}
-                                            onDelete={handleBugDeleted}
-                                        />
+                                        <button 
+                                            onClick={() => handleEditClick(bug)}
+                                            className="text-blue-600 hover:text-blue-900 mr-4"
+                                        >
+                                            Edit
+                                        </button>
+                                        <button 
+                                            onClick={() => handleDeleteClick(bug)}
+                                            className="text-red-600 hover:text-red-900"
+                                        >
+                                            Delete
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
@@ -141,6 +225,30 @@ const BugList: React.FC = () => {
                 onClose={() => setIsModalOpen(false)}
                 onSubmit={handleAddBug}
             />
+
+            {selectedBug && (
+                <EditBugModal 
+                    isOpen={isEditModalOpen}
+                    onClose={() => {
+                        setIsEditModalOpen(false);
+                        setSelectedBug(null);
+                    }}
+                    onSubmit={handleEditBug}
+                    bug={selectedBug}
+                />
+            )}
+
+            {bugToDelete && (
+                <DeleteConfirmationModal
+                    isOpen={isDeleteModalOpen}
+                    onClose={() => {
+                        setIsDeleteModalOpen(false);
+                        setBugToDelete(null);
+                    }}
+                    onConfirm={handleConfirmDelete}
+                    bugTitle={bugToDelete.title}
+                />
+            )}
         </div>
     );
 };
