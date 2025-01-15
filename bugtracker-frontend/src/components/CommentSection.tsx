@@ -46,11 +46,12 @@ export default function CommentSection({ bugId, comments = [], onCommentAdded }:
             <div className="mb-6">
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label htmlFor="author" className="block text-sm font-medium text-gray-700">
                             Your Name
                         </label>
                         <input
                             type="text"
+                            id="author"
                             value={author}
                             onChange={(e) => setAuthor(e.target.value)}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -58,10 +59,11 @@ export default function CommentSection({ bugId, comments = [], onCommentAdded }:
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label htmlFor="content" className="block text-sm font-medium text-gray-700">
                             Comment
                         </label>
                         <textarea
+                            id="content"
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -71,7 +73,7 @@ export default function CommentSection({ bugId, comments = [], onCommentAdded }:
                     </div>
                     <button
                         type="submit"
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || !author || !content}
                         className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
                     >
                         {isSubmitting ? 'Adding...' : 'Add Comment'}
@@ -80,17 +82,21 @@ export default function CommentSection({ bugId, comments = [], onCommentAdded }:
             </div>
 
             <div className="space-y-4">
-                {(comments || []).map((comment) => (
-                    <div key={comment.id} className="bg-gray-50 p-4 rounded-lg">
-                        <div className="flex justify-between items-start">
-                            <span className="font-medium">{comment.author}</span>
-                            <span className="text-sm text-gray-500">
-                                {new Date(comment.createdAt).toLocaleString()}
-                            </span>
+                {comments.length === 0 ? (
+                    <p>No comments yet.</p>
+                ) : (
+                    comments.map((comment) => (
+                        <div key={comment.id} className="bg-gray-50 p-4 rounded-lg">
+                            <div className="flex justify-between items-start">
+                                <span className="font-medium">{comment.author}</span>
+                                <span className="text-sm text-gray-500">
+                                    {new Date(comment.createdAt).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'medium' })}
+                                </span>
+                            </div>
+                            <p className="mt-2 text-gray-700">{comment.content}</p>
                         </div>
-                        <p className="mt-2 text-gray-700">{comment.content}</p>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
         </div>
     );
