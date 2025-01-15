@@ -14,19 +14,31 @@ import (
 )
 
 func RegisterRoutes(r *mux.Router) {
-	r.HandleFunc("/api/bugs", CreateBugHandler).Methods("POST")
-	r.HandleFunc("/api/bugs", GetBugsHandler).Methods("GET")
-	r.HandleFunc("/api/bugs/{id}", GetBugHandler).Methods("GET")
-	r.HandleFunc("/api/bugs/{id}", UpdateBugHandler).Methods("PUT")
-	r.HandleFunc("/api/bugs/{id}", DeleteBugHandler).Methods("DELETE")
+	r.HandleFunc("/api/bugs", CreateBug).Methods("POST")
+	r.HandleFunc("/api/bugs", GetBugs).Methods("GET")
+	r.HandleFunc("/api/bugs/{id}", GetBug).Methods("GET")
+	r.HandleFunc("/api/bugs/{id}", UpdateBug).Methods("PUT")
+	r.HandleFunc("/api/bugs/{id}", DeleteBug).Methods("DELETE")
 	RegisterCommentRoutes(r)
+	r.HandleFunc("/api/health", HealthCheck).Methods("GET")
 }
 
-func CreateBugHandler(w http.ResponseWriter, r *http.Request) {
+func CreateBug(w http.ResponseWriter, r *http.Request) {
 	var req models.CreateBugRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Printf("Failed to decode create bug request: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "invalid request body",
+		})
+		return
+	}
+
+	if req.Title == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "title is required",
+		})
 		return
 	}
 
@@ -40,17 +52,20 @@ func CreateBugHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := db.CreateBug(bug); err != nil {
-		log.Printf("Failed to create bug with ID %d: %v", bug.ID, err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Printf("Failed to create bug: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
 		return
 	}
 
-	log.Printf("Successfully created bug with ID: %d", bug.ID)
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(bug)
 }
 
-func GetBugsHandler(w http.ResponseWriter, r *http.Request) {
+func GetBugs(w http.ResponseWriter, r *http.Request) {
 	bugs, err := db.GetAllBugs()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -61,48 +76,73 @@ func GetBugsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(bugs)
 }
 
-func GetBugHandler(w http.ResponseWriter, r *http.Request) {
+func GetBug(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
+	w.Header().Set("Content-Type", "application/json")
+
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, "Invalid ID format", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "invalid bug ID",
+		})
 		return
 	}
 
 	bug, err := db.GetBug(idInt)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		status := http.StatusInternalServerError
+		if err.Error() == "bug not found" {
+			status = http.StatusNotFound
+		}
+		w.WriteHeader(status)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(bug)
 }
 
-// UpdateBugHandler updates an existing bug
-func UpdateBugHandler(w http.ResponseWriter, r *http.Request) {
+func UpdateBug(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
+
+	w.Header().Set("Content-Type", "application/json")
 
 	// Convert string ID to int
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, "Invalid ID format", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "invalid bug ID",
+		})
 		return
 	}
 
 	var req models.CreateBugRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "invalid request body",
+		})
 		return
 	}
 
 	// Retrieve existing bug
 	existingBug, err := db.GetBug(idInt)
 	if err != nil {
-		http.Error(w, "Bug not found", http.StatusNotFound)
+		status := http.StatusInternalServerError
+		if err.Error() == "bug not found" {
+			status = http.StatusNotFound
+		}
+		w.WriteHeader(status)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
 		return
 	}
 
@@ -111,36 +151,52 @@ func UpdateBugHandler(w http.ResponseWriter, r *http.Request) {
 	existingBug.Description = req.Description
 	existingBug.Status = req.Status
 	existingBug.Priority = req.Priority
+	existingBug.UpdatedAt = time.Now()
 
-	// Use UpdateBug instead of CreateBug
 	if err := db.UpdateBug(existingBug); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(existingBug)
 }
 
-// DeleteBugHandler deletes a bug by its ID
-func DeleteBugHandler(w http.ResponseWriter, r *http.Request) {
+func DeleteBug(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
+	w.Header().Set("Content-Type", "application/json")
+
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, "Invalid ID format", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "invalid bug ID",
+		})
 		return
 	}
-
-	log.Printf("Attempting to delete bug with ID: %d", idInt)
 
 	if err := db.DeleteBug(idInt); err != nil {
-		log.Printf("Failed to delete bug with ID %d: %v", idInt, err)
-		http.Error(w, "Failed to delete bug", http.StatusInternalServerError)
+		status := http.StatusInternalServerError
+		if err.Error() == "bug not found" {
+			status = http.StatusNotFound
+		}
+		w.WriteHeader(status)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
 		return
 	}
 
-	log.Printf("Successfully deleted bug with ID: %d", idInt)
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func HealthCheck(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"status": "ok",
+	})
 }

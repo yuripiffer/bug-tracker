@@ -17,37 +17,16 @@ import (
 )
 
 func main() {
-	// Add this line at the start of main to configure logging
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-
-	// Add a test log to verify logging is working
 	log.Println("Starting Bug Tracker backend server...")
 
-	// Initialize the database
 	if err := db.Init(); err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
-	// Ensure cleanup happens
 	defer db.Cleanup()
 
-	r := mux.NewRouter()
-
-	// Register routes
-	handlers.RegisterRoutes(r)
-
-	// Create a CORS middleware
-	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"http://localhost:3000"}, // Update this with your frontend URL
-		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders: []string{"Content-Type", "Authorization"},
-		Debug:          true, // Set to false in production
-	})
-
-	// Create server with CORS-enabled handler
-	srv := &http.Server{
-		Addr:    ":8080",
-		Handler: c.Handler(r),
-	}
+	// Create the production server
+	srv := createServer()
 
 	// Channel to listen for errors coming from the listener
 	serverErrors := make(chan error, 1)
@@ -80,5 +59,23 @@ func main() {
 		} else {
 			log.Println("Server shut down gracefully.")
 		}
+	}
+}
+
+// Production server creation
+func createServer() *http.Server {
+	r := mux.NewRouter()
+	handlers.RegisterRoutes(r)
+
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://localhost:3000"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders: []string{"Content-Type", "Authorization"},
+		Debug:          true,
+	})
+
+	return &http.Server{
+		Addr:    ":8080",
+		Handler: c.Handler(r),
 	}
 }
