@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"bugtracker-backend/internal/models"
@@ -13,25 +14,36 @@ import (
 )
 
 var (
-	database       *bbolt.DB
+	db             *bbolt.DB
+	initialized    bool
 	bugsBucket     = []byte("bugs")
 	commentsBucket = []byte("comments")
 	counterBucket  = []byte("counter")
-	databasePath   = "bugs.db" // Ensure this path is correct
+	databasePath   = getDBPath() // Use function to get path
 )
+
+func getDBPath() string {
+	if path := os.Getenv("DB_PATH"); path != "" {
+		return path
+	}
+	return "bugs.db"
+}
 
 // Init initializes the BoltDB database
 func Init() error {
+	if initialized {
+		return fmt.Errorf("database already initialized")
+	}
+
 	// Open the BoltDB database file
-	db, err := bbolt.Open(databasePath, 0600, nil)
+	var err error
+	db, err = bbolt.Open(databasePath, 0600, nil)
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
 	}
 
-	database = db
-
 	// Create both buckets if they don't exist
-	err = database.Update(func(tx *bbolt.Tx) error {
+	err = db.Update(func(tx *bbolt.Tx) error {
 		// Create bugs bucket
 		_, err := tx.CreateBucketIfNotExists(bugsBucket)
 		if err != nil {
@@ -57,12 +69,16 @@ func Init() error {
 	}
 
 	log.Println("Database initialized successfully.")
+	initialized = true
 	return nil
 }
 
 // CreateBug inserts a new bug into the database
 func CreateBug(bug *models.Bug) error {
-	return database.Update(func(tx *bbolt.Tx) error {
+	if db == nil {
+		return fmt.Errorf("database not initialized")
+	}
+	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(bugsBucket)
 
 		// Get next ID
@@ -88,7 +104,7 @@ func CreateBug(bug *models.Bug) error {
 func GetBug(id int) (*models.Bug, error) {
 	var bug models.Bug
 
-	err := database.View(func(tx *bbolt.Tx) error {
+	err := db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(bugsBucket)
 		data := b.Get(itob(id))
 		if data == nil {
@@ -109,7 +125,7 @@ func GetBug(id int) (*models.Bug, error) {
 func GetAllBugs() ([]*models.Bug, error) {
 	var bugs []*models.Bug
 
-	err := database.View(func(tx *bbolt.Tx) error {
+	err := db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(bugsBucket)
 
 		return b.ForEach(func(k, v []byte) error {
@@ -131,7 +147,7 @@ func GetAllBugs() ([]*models.Bug, error) {
 
 // DeleteBug removes a bug from the database by its ID
 func DeleteBug(id int) error {
-	return database.Update(func(tx *bbolt.Tx) error {
+	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(bugsBucket)
 		if b == nil {
 			return fmt.Errorf("bucket not found")
@@ -142,14 +158,11 @@ func DeleteBug(id int) error {
 
 // Cleanup closes the database
 func Cleanup() {
-	if database != nil {
-		err := database.Close()
-		if err != nil {
-			log.Printf("Error closing database: %v", err)
-		} else {
-			log.Println("Database closed successfully.")
-		}
+	if db != nil {
+		db.Close()
+		db = nil
 	}
+	initialized = false
 }
 
 // Add this function to get the next ID
@@ -183,7 +196,7 @@ func btoi(b []byte) int {
 }
 
 func UpdateBug(bug *models.Bug) error {
-	return database.Update(func(tx *bbolt.Tx) error {
+	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(bugsBucket)
 
 		// Check if bug exists

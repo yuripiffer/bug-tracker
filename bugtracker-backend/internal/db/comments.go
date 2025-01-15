@@ -28,7 +28,7 @@ func CreateComment(bugID string, comment *models.Comment) error {
 	comment.CreatedAt = time.Now()
 	comment.BugID = bugID
 
-	return database.Update(func(tx *bbolt.Tx) error {
+	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(commentsBucket)
 		encoded, err := json.Marshal(comment)
 		if err != nil {
@@ -38,10 +38,10 @@ func CreateComment(bugID string, comment *models.Comment) error {
 	})
 }
 
-func GetComments(bugID string) ([]models.Comment, error) {
-	var comments []models.Comment
+func GetComments(bugID string) ([]*models.Comment, error) {
+	var comments []*models.Comment
 
-	err := database.View(func(tx *bbolt.Tx) error {
+	err := db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(commentsBucket)
 		return b.ForEach(func(k, v []byte) error {
 			var comment models.Comment
@@ -49,7 +49,7 @@ func GetComments(bugID string) ([]models.Comment, error) {
 				return err
 			}
 			if comment.BugID == bugID {
-				comments = append(comments, comment)
+				comments = append(comments, &comment)
 			}
 			return nil
 		})
