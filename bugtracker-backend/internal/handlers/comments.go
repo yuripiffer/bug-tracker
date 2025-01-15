@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 
@@ -12,18 +12,28 @@ import (
 )
 
 func RegisterCommentRoutes(r *mux.Router) {
-	r.HandleFunc("/api/bugs/{bugId}/comments", CreateCommentHandler).Methods("POST")
-	r.HandleFunc("/api/bugs/{bugId}/comments", GetCommentsHandler).Methods("GET")
+	r.HandleFunc("/api/bugs/{bugId}/comments", CreateComment).Methods("POST")
+	r.HandleFunc("/api/bugs/{bugId}/comments", GetComments).Methods("GET")
 }
 
-func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
+func CreateComment(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	bugID := vars["bugId"]
 
 	var req models.CreateCommentRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		log.Printf("Failed to decode comment request: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "invalid request body",
+		})
+		return
+	}
+
+	if req.Content == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "content is required",
+		})
 		return
 	}
 
@@ -32,29 +42,50 @@ func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
 		Content: req.Content,
 	}
 
-	log.Printf("Creating comment for bug %s by %s", bugID, req.Author)
-
 	if err := db.CreateComment(bugID, comment); err != nil {
-		log.Printf("Failed to create comment: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		status := http.StatusInternalServerError
+		if err.Error() == "bug not found" {
+			status = http.StatusNotFound
+		}
+		w.WriteHeader(status)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
 		return
 	}
 
-	log.Printf("Successfully created comment with ID: %s", comment.ID)
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(comment)
 }
 
-func GetCommentsHandler(w http.ResponseWriter, r *http.Request) {
+func GetComments(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	bugID := vars["bugId"]
 
-	comments, err := db.GetComments(bugID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	w.Header().Set("Content-Type", "application/json")
+
+	// Validate bug ID format
+	if _, err := strconv.Atoi(bugID); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "invalid bug ID",
+		})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	comments, err := db.GetComments(bugID)
+	if err != nil {
+		status := http.StatusInternalServerError
+		if err.Error() == "bug not found" {
+			status = http.StatusNotFound
+		}
+		w.WriteHeader(status)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+
 	json.NewEncoder(w).Encode(comments)
 }

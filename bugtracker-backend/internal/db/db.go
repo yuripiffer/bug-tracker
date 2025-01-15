@@ -218,3 +218,36 @@ func UpdateBug(bug *models.Bug) error {
 		return b.Put(itob(bug.ID), encoded)
 	})
 }
+
+func CleanupTestDB() error {
+	if db == nil {
+		return nil
+	}
+
+	err := db.Update(func(tx *bbolt.Tx) error {
+		// Delete all data from all buckets
+		if err := tx.DeleteBucket(bugsBucket); err != nil {
+			return err
+		}
+		if err := tx.DeleteBucket(commentsBucket); err != nil {
+			return err
+		}
+		if err := tx.DeleteBucket(counterBucket); err != nil {
+			return err
+		}
+
+		// Recreate empty buckets
+		if _, err := tx.CreateBucket(bugsBucket); err != nil {
+			return err
+		}
+		if _, err := tx.CreateBucket(commentsBucket); err != nil {
+			return err
+		}
+		if _, err := tx.CreateBucket(counterBucket); err != nil {
+			return err
+		}
+		return nil
+	})
+
+	return err
+}

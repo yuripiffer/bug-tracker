@@ -39,9 +39,20 @@ func CreateComment(bugID string, comment *models.Comment) error {
 }
 
 func GetComments(bugID string) ([]*models.Comment, error) {
-	var comments []*models.Comment
+	// First verify the bug id format
+	idInt, err := strconv.Atoi(bugID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid bug ID format")
+	}
 
-	err := db.View(func(tx *bbolt.Tx) error {
+	// Check if bug exists
+	_, err = GetBug(idInt)
+	if err != nil {
+		return nil, fmt.Errorf("bug not found")
+	}
+
+	var comments []*models.Comment
+	err = db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(commentsBucket)
 		return b.ForEach(func(k, v []byte) error {
 			var comment models.Comment

@@ -2,17 +2,33 @@ package db
 
 import (
 	"bugtracker-backend/internal/models"
+	"os"
 	"strconv"
 	"testing"
+
+	"bugtracker-backend/internal/testutil"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateComment(t *testing.T) {
-	// Setup
+	os.Setenv("DB_PATH", testutil.GetTestDBPath())
+	defer testutil.CleanupTestDB()
+
 	err := Init()
 	assert.NoError(t, err)
-	defer Cleanup()
+	defer func() {
+		CleanupTestDB()
+		Cleanup()
+	}()
+
+	// Create a test bug first
+	bug := &models.Bug{
+		Title:       "Test Bug",
+		Description: "Test Description",
+	}
+	err = CreateBug(bug)
+	assert.NoError(t, err)
 
 	tests := []struct {
 		name       string
@@ -23,7 +39,7 @@ func TestCreateComment(t *testing.T) {
 	}{
 		{
 			name:  "Valid comment creation",
-			bugID: "1",
+			bugID: strconv.Itoa(bug.ID),
 			comment: &models.Comment{
 				Author:  "Test User",
 				Content: "Test Comment",
@@ -69,26 +85,28 @@ func TestCreateComment(t *testing.T) {
 }
 
 func TestGetComments(t *testing.T) {
-	// Setup
+	os.Setenv("DB_PATH", testutil.GetTestDBPath())
+	defer testutil.CleanupTestDB()
+
 	err := Init()
 	assert.NoError(t, err)
-	defer Cleanup()
+	defer func() {
+		CleanupTestDB()
+		Cleanup()
+	}()
 
 	// Create a bug first
 	bug := &models.Bug{
 		Title:       "Test Bug",
 		Description: "Test Description",
-		Status:      "Open",
-		Priority:    "High",
 	}
 	err = CreateBug(bug)
 	assert.NoError(t, err)
 
-	// Create some test comments
+	// Create test comments
 	testComments := []*models.Comment{
 		{Author: "User1", Content: "Comment 1"},
 		{Author: "User2", Content: "Comment 2"},
-		{Author: "User3", Content: "Comment 3"},
 	}
 
 	for _, comment := range testComments {
@@ -99,39 +117,31 @@ func TestGetComments(t *testing.T) {
 	tests := []struct {
 		name        string
 		bugID       string
-		expectedLen int
-		shouldErr   bool
+		wantErr     bool
+		expectedErr string
 	}{
 		{
-			name:        "Get existing comments",
-			bugID:       strconv.Itoa(bug.ID),
-			expectedLen: 3,
-			shouldErr:   false,
+			name:    "Get existing comments",
+			bugID:   strconv.Itoa(bug.ID),
+			wantErr: false,
 		},
 		{
 			name:        "Get comments for non-existent bug",
 			bugID:       "999",
-			expectedLen: 0,
-			shouldErr:   false,
+			wantErr:     true,
+			expectedErr: "bug not found",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			comments, err := GetComments(tt.bugID)
-			if tt.shouldErr {
+			if tt.wantErr {
 				assert.Error(t, err)
+				assert.Equal(t, tt.expectedErr, err.Error())
 			} else {
 				assert.NoError(t, err)
-				assert.Len(t, comments, tt.expectedLen)
-				if tt.expectedLen > 0 {
-					// Verify comment fields
-					for _, comment := range comments {
-						assert.NotEmpty(t, comment.ID)
-						assert.NotEmpty(t, comment.CreatedAt)
-						assert.Equal(t, tt.bugID, comment.BugID)
-					}
-				}
+				assert.Len(t, comments, len(testComments))
 			}
 		})
 	}

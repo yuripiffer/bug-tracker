@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"bugtracker-backend/internal/models"
+	"bugtracker-backend/internal/testutil"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -23,9 +24,15 @@ func cleanup() {
 }
 
 func TestDatabaseInitialization(t *testing.T) {
+	os.Setenv("DB_PATH", testutil.GetTestDBPath())
+	defer testutil.CleanupTestDB()
+
 	err := Init()
 	assert.NoError(t, err)
-	defer cleanup()
+	defer func() {
+		CleanupTestDB()
+		Cleanup()
+	}()
 
 	// Test DB by creating a bug
 	bug := &models.Bug{Title: "Test", Description: "Test"}

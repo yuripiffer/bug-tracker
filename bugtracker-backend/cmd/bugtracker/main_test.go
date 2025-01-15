@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
 	"bugtracker-backend/internal/handlers"
+	"bugtracker-backend/internal/testutil"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -15,6 +17,9 @@ import (
 )
 
 func TestServerInitialization(t *testing.T) {
+	os.Setenv("DB_PATH", testutil.GetTestDBPath())
+	defer testutil.CleanupTestDB()
+
 	testPort := ":8081" // Use a different port for testing
 	srv := createTestServer()
 	srv.Addr = testPort // Override the server port
@@ -51,6 +56,9 @@ func TestServerInitialization(t *testing.T) {
 }
 
 func TestCORSConfiguration(t *testing.T) {
+	os.Setenv("DB_PATH", testutil.GetTestDBPath())
+	defer testutil.CleanupTestDB()
+
 	testPort := ":8081"
 	srv := createTestServer()
 	srv.Addr = testPort
