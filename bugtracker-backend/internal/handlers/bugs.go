@@ -20,6 +20,7 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/api/bugs/{id}", UpdateBugHandler).Methods("PUT")
 	r.HandleFunc("/api/bugs/{id}", DeleteBugHandler).Methods("DELETE")
 	RegisterCommentRoutes(r)
+	r.HandleFunc("/api/health", HealthCheckHandler).Methods("GET")
 }
 
 func CreateBugHandler(w http.ResponseWriter, r *http.Request) {
@@ -143,4 +144,8 @@ func DeleteBugHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Successfully deleted bug with ID: %d", idInt)
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 }
