@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { getBugs, createBug, updateBug, deleteBug } from '../api/bugs';
 import AddBugModal from './AddBugModal';
 import LoadingScreen from './LoadingScreen';
@@ -9,7 +9,7 @@ import { useRouter } from 'next/router';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import Notification from './Notification';
 
-const BugList: React.FC = () => {
+export default function BugList({ testMode = false }) {
     const router = useRouter();
     const { query, pathname, replace } = router;
     const [bugs, setBugs] = useState<Bug[]>([]);
@@ -29,20 +29,24 @@ const BugList: React.FC = () => {
                 const data = await getBugs();
                 setBugs(data);
                 setLoading(false);
+                if (testMode) {
+                    setShowLoadingScreen(false);
+                }
             } catch (error) {
                 console.error('Error fetching bugs:', error);
                 setError('Failed to fetch bugs');
                 setLoading(false);
+                setShowLoadingScreen(false);
             }
         };
 
         fetchBugs();
-    }, []);
+    }, [testMode]);
 
-    const handleLoadingComplete = () => {
+    const handleLoadingComplete = useCallback(() => {
         setShowLoadingScreen(false);
         setFadeIn(true);
-    };
+    }, []);
 
     const handleAddBug = async (newBug: Omit<Bug, 'id' | 'status'>) => {
         try {
@@ -108,7 +112,7 @@ const BugList: React.FC = () => {
     };
 
     if (showLoadingScreen) {
-        return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
+        return <LoadingScreen onLoadingComplete={handleLoadingComplete} testMode={testMode} />;
     }
 
     if (loading) return <div className="text-center p-4">Loading...</div>;
@@ -251,6 +255,4 @@ const BugList: React.FC = () => {
             )}
         </div>
     );
-};
-
-export default BugList; 
+} 

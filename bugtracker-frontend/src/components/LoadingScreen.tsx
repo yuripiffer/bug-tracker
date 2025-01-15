@@ -6,54 +6,58 @@ const loadingGifs = [
     '/loading/loading2.gif',
     '/loading/loading3.gif',
     '/loading/loading4.gif',
-    // Add more GIF paths here
 ];
 
 interface LoadingScreenProps {
     onLoadingComplete: () => void;
+    testMode?: boolean;
 }
 
-export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
+export default function LoadingScreen({ onLoadingComplete, testMode = false }: LoadingScreenProps) {
     const [progress, setProgress] = useState(0);
     const [currentGif, setCurrentGif] = useState(loadingGifs[0]);
 
     useEffect(() => {
-        // Progress bar logic
+        if (testMode) {
+            setTimeout(() => {
+                onLoadingComplete();
+            }, 0);
+            return;
+        }
+
         const progressInterval = setInterval(() => {
             setProgress(prev => {
                 if (prev >= 100) {
                     clearInterval(progressInterval);
+                    setTimeout(() => {
+                        onLoadingComplete();
+                    }, 0);
                     return 100;
                 }
-                return prev + 5; // Increment by 5 every 100ms to complete in 2 seconds
+                return prev + 5;
             });
         }, 100);
 
-        // GIF cycling logic
         const gifInterval = setInterval(() => {
             setCurrentGif(prev => {
                 const currentIndex = loadingGifs.indexOf(prev);
                 const nextIndex = (currentIndex + 1) % loadingGifs.length;
                 return loadingGifs[nextIndex];
             });
-        }, 1000); // Change GIF every 500ms for smoother transitions in shorter duration
+        }, 1000);
 
-        // Cleanup intervals
         return () => {
             clearInterval(progressInterval);
             clearInterval(gifInterval);
         };
-    }, []);
+    }, [testMode, onLoadingComplete]);
 
-    // Trigger onLoadingComplete after 5 seconds
-    useEffect(() => {
-        if (progress >= 100) {
-            onLoadingComplete();
-        }
-    }, [progress, onLoadingComplete]);
+    if (testMode) {
+        return null;
+    }
 
     return (
-        <div className="fixed inset-0 bg-gray-900 flex flex-col items-center justify-center">
+        <div data-testid="loading-screen" className="fixed inset-0 bg-gray-900 flex flex-col items-center justify-center">
             <div className="relative w-32 h-32 mb-8">
                 <Image 
                     src={currentGif}
