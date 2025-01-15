@@ -111,23 +111,38 @@ func UpdateBug(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
+	w.Header().Set("Content-Type", "application/json")
+
 	// Convert string ID to int
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, "Invalid ID format", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "invalid bug ID",
+		})
 		return
 	}
 
 	var req models.CreateBugRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "invalid request body",
+		})
 		return
 	}
 
 	// Retrieve existing bug
 	existingBug, err := db.GetBug(idInt)
 	if err != nil {
-		http.Error(w, "Bug not found", http.StatusNotFound)
+		status := http.StatusInternalServerError
+		if err.Error() == "bug not found" {
+			status = http.StatusNotFound
+		}
+		w.WriteHeader(status)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
 		return
 	}
 
@@ -136,14 +151,16 @@ func UpdateBug(w http.ResponseWriter, r *http.Request) {
 	existingBug.Description = req.Description
 	existingBug.Status = req.Status
 	existingBug.Priority = req.Priority
+	existingBug.UpdatedAt = time.Now()
 
-	// Use UpdateBug instead of CreateBug
 	if err := db.UpdateBug(existingBug); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(existingBug)
 }
 
@@ -151,21 +168,29 @@ func DeleteBug(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
+	w.Header().Set("Content-Type", "application/json")
+
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
-		http.Error(w, "Invalid ID format", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "invalid bug ID",
+		})
 		return
 	}
-
-	log.Printf("Attempting to delete bug with ID: %d", idInt)
 
 	if err := db.DeleteBug(idInt); err != nil {
-		log.Printf("Failed to delete bug with ID %d: %v", idInt, err)
-		http.Error(w, "Failed to delete bug", http.StatusInternalServerError)
+		status := http.StatusInternalServerError
+		if err.Error() == "bug not found" {
+			status = http.StatusNotFound
+		}
+		w.WriteHeader(status)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
 		return
 	}
 
-	log.Printf("Successfully deleted bug with ID: %d", idInt)
 	w.WriteHeader(http.StatusNoContent)
 }
 

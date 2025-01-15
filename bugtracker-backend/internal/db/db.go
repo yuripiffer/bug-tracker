@@ -152,6 +152,12 @@ func DeleteBug(id int) error {
 		if b == nil {
 			return fmt.Errorf("bucket not found")
 		}
+
+		// Check if bug exists first
+		if b.Get(itob(id)) == nil {
+			return fmt.Errorf("bug not found")
+		}
+
 		return b.Delete(itob(id))
 	})
 }

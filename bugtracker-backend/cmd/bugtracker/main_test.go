@@ -16,6 +16,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestMain(m *testing.M) {
+	os.Setenv("TEST_MODE", "1")
+	code := m.Run()
+	testutil.CleanupTestDB()
+	os.Exit(code)
+}
+
 func TestServerInitialization(t *testing.T) {
 	os.Setenv("DB_PATH", testutil.GetTestDBPath())
 	defer testutil.CleanupTestDB()

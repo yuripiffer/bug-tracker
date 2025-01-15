@@ -10,19 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const testDBPath = "test.db"
-
-func init() {
-	// Set test database path for all tests
-	os.Setenv("DB_PATH", testDBPath)
-}
-
-func cleanup() {
-	Cleanup()
-	// Remove test database file after each test
-	os.Remove(testDBPath)
-}
-
 func TestDatabaseInitialization(t *testing.T) {
 	os.Setenv("DB_PATH", testutil.GetTestDBPath())
 	defer testutil.CleanupTestDB()
@@ -41,23 +28,30 @@ func TestDatabaseInitialization(t *testing.T) {
 }
 
 func TestMultipleInitializations(t *testing.T) {
+	os.Setenv("DB_PATH", testutil.GetTestDBPath())
+	defer testutil.CleanupTestDB()
+
 	// First initialization
 	err := Init()
 	assert.NoError(t, err)
-
-	// Cleanup after first initialization
-	cleanup()
+	Cleanup()
 
 	// Second initialization should work
 	err = Init()
 	assert.NoError(t, err)
-	defer cleanup()
+	defer func() {
+		CleanupTestDB()
+		Cleanup()
+	}()
 }
 
 func TestCleanup(t *testing.T) {
+	os.Setenv("DB_PATH", testutil.GetTestDBPath())
+	defer testutil.CleanupTestDB()
+
 	err := Init()
 	assert.NoError(t, err)
-	cleanup()
+	Cleanup()
 
 	// Test DB is inaccessible after cleanup
 	bug := &models.Bug{Title: "Test", Description: "Test"}
@@ -84,17 +78,38 @@ func TestInitWithInvalidPath(t *testing.T) {
 	err := Init()
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to open database")
-	defer cleanup()
+	defer func() {
+		CleanupTestDB()
+		Cleanup()
+	}()
 }
 
 func TestConcurrentInitializations(t *testing.T) {
-	// First initialization
+	os.Setenv("DB_PATH", testutil.GetTestDBPath())
+	defer testutil.CleanupTestDB()
+
 	err := Init()
 	assert.NoError(t, err)
-	defer cleanup()
+	defer func() {
+		CleanupTestDB()
+		Cleanup()
+	}()
 
 	// Attempt second initialization without cleanup
 	err = Init()
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "database already initialized")
+}
+
+func TestMain(m *testing.M) {
+	// Set test mode
+	os.Setenv("TEST_MODE", "1")
+
+	// Run tests
+	code := m.Run()
+
+	// Cleanup
+	testutil.CleanupTestDB()
+
+	os.Exit(code)
 }
