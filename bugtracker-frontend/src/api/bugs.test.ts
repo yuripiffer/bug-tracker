@@ -4,8 +4,16 @@ import { createBug, getBugs, updateBug, deleteBug } from '@/api/bugs'
 global.fetch = jest.fn()
 
 describe('Bug API', () => {
+    // Mock console.error before all tests
+    let consoleErrorSpy: jest.SpyInstance;
+
     beforeEach(() => {
         jest.clearAllMocks()
+        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    })
+
+    afterEach(() => {
+        consoleErrorSpy.mockRestore();
     })
 
     describe('getBugs', () => {
@@ -28,13 +36,12 @@ describe('Bug API', () => {
             expect(result).toEqual(mockBugs)
         })
 
-        // New test: Network error
         it('should handle network errors when fetching bugs', async () => {
-            (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
-            await expect(getBugs()).rejects.toThrow('Network error')
+            global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
+            
+            await expect(getBugs()).rejects.toThrow('Network error');
         })
 
-        // New test: Invalid JSON
         it('should handle invalid JSON responses when fetching bugs', async () => {
             (global.fetch as jest.Mock).mockResolvedValueOnce({
                 ok: true,

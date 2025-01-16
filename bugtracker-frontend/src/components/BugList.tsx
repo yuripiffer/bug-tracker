@@ -13,7 +13,6 @@ export default function BugList({ testMode = false }) {
     const router = useRouter();
     const { query, pathname, replace } = router;
     const [bugs, setBugs] = useState<Bug[]>([]);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [showLoadingScreen, setShowLoadingScreen] = useState(true);
@@ -28,20 +27,17 @@ export default function BugList({ testMode = false }) {
             try {
                 const data = await getBugs();
                 setBugs(data);
-                setLoading(false);
-                if (testMode) {
-                    setShowLoadingScreen(false);
-                }
+                setError(null);
             } catch (error) {
                 console.error('Error fetching bugs:', error);
                 setError('Failed to fetch bugs');
-                setLoading(false);
-                setShowLoadingScreen(false);
             }
         };
 
-        fetchBugs();
-    }, [testMode]);
+        if (!showLoadingScreen) {
+            fetchBugs();
+        }
+    }, [showLoadingScreen]);
 
     const handleLoadingComplete = useCallback(() => {
         setShowLoadingScreen(false);
@@ -115,7 +111,6 @@ export default function BugList({ testMode = false }) {
         return <LoadingScreen onLoadingComplete={handleLoadingComplete} testMode={testMode} />;
     }
 
-    if (loading) return <div className="text-center p-4">Loading...</div>;
     if (error) return <div className="text-center p-4 text-red-500">Error: {error}</div>;
 
     return (
