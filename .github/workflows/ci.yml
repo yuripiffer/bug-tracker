@@ -45,7 +45,10 @@ jobs:
       - name: Test backend
         working-directory: ./bugtracker-backend
         run: |
-          go test -v ./... -json > test-report.json || (echo "Tests failed" && exit 1)
+          set -o pipefail
+          go test -v ./... 2>&1 | tee test-output.txt
+          go test -v ./... -json > test-report.json
+          exit ${PIPESTATUS[0]}
 
       # Upload test results
       - name: Upload test results
@@ -53,8 +56,19 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-test-results
-          path: bugtracker-backend/test-report.json
+          path: |
+            bugtracker-backend/test-report.json
+            bugtracker-backend/test-output.txt
           retention-days: 7
+
+      # Add test summary
+      - name: Create test summary
+        if: always()
+        run: |
+          echo "## Backend Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
+          cat bugtracker-backend/test-output.txt >> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
 
       # Build frontend
       - name: Build frontend
