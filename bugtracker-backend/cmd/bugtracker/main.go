@@ -65,17 +65,27 @@ func main() {
 // Production server creation
 func createServer() *http.Server {
 	r := mux.NewRouter()
-	handlers.RegisterRoutes(r)
 
+	// Apply CORS middleware to all routes
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{"http://localhost:3000"},
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders: []string{"Content-Type", "Authorization"},
-		Debug:          true,
+		AllowedHeaders: []string{"*"},
+		ExposedHeaders: []string{"Content-Length"},
+		AllowCredentials: true,
 	})
 
+	// Wrap the router with CORS middleware
+	handler := c.Handler(r)
+
+	// Register all routes
+	r.HandleFunc("/api/health", handlers.HealthCheck).Methods("GET")
+	apiRouter := r.PathPrefix("/api").Subrouter()
+	handlers.RegisterRoutes(apiRouter)
+
+	log.Printf("Starting server on :8080")
 	return &http.Server{
-		Addr:    ":8080",
-		Handler: c.Handler(r),
+		Addr:    "0.0.0.0:8080",
+		Handler: handler,
 	}
 }

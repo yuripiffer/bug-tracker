@@ -1,0 +1,64 @@
+version: "3.8"
+
+networks:
+  bugtracker:
+    driver: bridge
+
+services:
+  frontend:
+    build:
+      context: ./bugtracker-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8080
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - bugtracker
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  backend:
+    build:
+      context: ./bugtracker-backend
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+    networks:
+      - bugtracker
+    healthcheck:
+      test:
+        - "CMD"
+        - "/bin/sh"
+        - "-c"
+        - "sleep 2 && wget -O - http://localhost:8080/api/health 2>&1 | tee /dev/stderr || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  test:
+    build:
+      context: ./tests
+      dockerfile: Dockerfile
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    environment:
+      - CI=1 # Run tests headless by default
+      - DEBUG=1 # Enable debug output
+    networks:
+      - bugtracker
+    command: /bin/bash -c "ps aux && env && ./startup.sh"

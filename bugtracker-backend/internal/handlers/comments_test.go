@@ -5,77 +5,67 @@ import (
 	"bugtracker-backend/internal/models"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strconv"
 	"testing"
-
-	"bugtracker-backend/internal/testutil"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateComment(t *testing.T) {
-	// Set test database path
-	os.Setenv("DB_PATH", testutil.GetTestDBPath())
-	defer testutil.CleanupTestDB()
-
-	err := db.Init()
-	assert.NoError(t, err)
-	defer func() {
-		db.CleanupTestDB()
-		db.Cleanup()
-	}()
+	cleanup := setupTestDB(t)
+	defer cleanup()
 
 	// Create a test bug first
 	bug := &models.Bug{
 		Title:       "Test Bug",
 		Description: "Test Description",
 	}
-	err = db.CreateBug(bug)
+	err := db.CreateBug(bug)
 	assert.NoError(t, err)
 
 	tests := []struct {
 		name           string
 		bugID          string
-		payload        interface{}
+		requestBody    interface{}
 		expectedStatus int
 		expectedError  string
 	}{
 		{
 			name:  "Valid comment creation",
-			bugID: "1",
-			payload: models.CreateCommentRequest{
-				Author:  "Test User",
+			bugID: strconv.Itoa(bug.ID),
+			requestBody: models.CreateCommentRequest{
 				Content: "Test Comment",
+				Author:  "Test User",
 			},
 			expectedStatus: http.StatusCreated,
 		},
 		{
 			name:  "Invalid bug ID",
 			bugID: "999",
-			payload: models.CreateCommentRequest{
-				Author:  "Test User",
+			requestBody: models.CreateCommentRequest{
 				Content: "Test Comment",
+				Author:  "Test User",
 			},
 			expectedStatus: http.StatusNotFound,
-			expectedError:  "bug not found",
+			expectedError: "bug not found",
 		},
 		{
 			name:  "Missing content",
 			bugID: "1",
-			payload: models.CreateCommentRequest{
+			requestBody: models.CreateCommentRequest{
 				Author: "Test User",
 			},
 			expectedStatus: http.StatusBadRequest,
-			expectedError:  "content is required",
+			expectedError: "content is required",
 		},
 		{
 			name:           "Invalid JSON",
 			bugID:          "1",
-			payload:        `{"invalid": json}`,
+			requestBody:    `{"invalid": json}`,
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "invalid request body",
 		},
@@ -84,19 +74,19 @@ func TestCreateComment(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var body bytes.Buffer
-			if str, ok := tt.payload.(string); ok {
+			if str, ok := tt.requestBody.(string); ok {
 				body.WriteString(str)
 			} else {
-				err := json.NewEncoder(&body).Encode(tt.payload)
+				err := json.NewEncoder(&body).Encode(tt.requestBody)
 				assert.NoError(t, err)
 			}
 
-			req := httptest.NewRequest("POST", "/api/bugs/"+tt.bugID+"/comments", &body)
+			req := httptest.NewRequest("POST", fmt.Sprintf("/api/bugs/%s/comments", tt.bugID), &body)
 			w := httptest.NewRecorder()
 
 			// Set up router to handle URL parameters
 			router := mux.NewRouter()
-			router.HandleFunc("/api/bugs/{bugId}/comments", CreateComment)
+			router.HandleFunc("/api/bugs/{id}/comments", CreateComment)
 			router.ServeHTTP(w, req)
 
 			assert.Equal(t, tt.expectedStatus, w.Code)
@@ -112,30 +102,23 @@ func TestCreateComment(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotEmpty(t, comment.ID)
 				assert.NotEmpty(t, comment.CreatedAt)
-				assert.Equal(t, tt.bugID, comment.BugID)
+				expectedBugID, _ := strconv.Atoi(tt.bugID)
+				assert.Equal(t, expectedBugID, comment.BugID)
 			}
 		})
 	}
 }
 
 func TestGetComments(t *testing.T) {
-	// Set test database path
-	os.Setenv("DB_PATH", testutil.GetTestDBPath())
-	defer testutil.CleanupTestDB()
+	cleanup := setupTestDB(t)
+	defer cleanup()
 
-	err := db.Init()
-	assert.NoError(t, err)
-	defer func() {
-		db.CleanupTestDB()
-		db.Cleanup()
-	}()
-
-	// Create a test bug
+	// Create a test bug first
 	bug := &models.Bug{
 		Title:       "Test Bug",
 		Description: "Test Description",
 	}
-	err = db.CreateBug(bug)
+	err := db.CreateBug(bug)
 	assert.NoError(t, err)
 
 	// Create some test comments
@@ -159,7 +142,7 @@ func TestGetComments(t *testing.T) {
 	}{
 		{
 			name:           "Get existing comments",
-			bugID:          "1",
+			bugID:          strconv.Itoa(bug.ID),
 			expectedStatus: http.StatusOK,
 			expectedCount:  3,
 		},
@@ -179,11 +162,11 @@ func TestGetComments(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest("GET", "/api/bugs/"+tt.bugID+"/comments", nil)
+			req := httptest.NewRequest("GET", fmt.Sprintf("/api/bugs/%s/comments", tt.bugID), nil)
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc("/api/bugs/{bugId}/comments", GetComments)
+			router.HandleFunc("/api/bugs/{id}/comments", GetComments)
 			router.ServeHTTP(w, req)
 
 			assert.Equal(t, tt.expectedStatus, w.Code)

@@ -209,22 +209,20 @@ func TestCORSConfiguration(t *testing.T) {
 // Test-specific server creation
 func createTestServer() *http.Server {
 	r := mux.NewRouter()
-	handlers.RegisterRoutes(r)
+	// Health check endpoint before CORS
+	r.HandleFunc("/api/health", handlers.HealthCheck).Methods("GET")
 
-	c := cors.New(cors.Options{
+	handler := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers"},
-		ExposedHeaders:   []string{"Access-Control-Allow-Origin", "Access-Control-Allow-Methods", "Access-Control-Allow-Headers"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization", "Access-Control-Request-Method", "Access-Control-Request-Headers"},
 		AllowCredentials: true,
 		MaxAge:           300,
 		Debug:            true,
-	})
-
-	handler := c.Handler(r)
+	}).Handler(r)
 
 	return &http.Server{
-		Addr:    ":8080",
+		Addr:    ":8081",
 		Handler: handler,
 	}
 }

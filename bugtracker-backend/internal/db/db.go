@@ -35,14 +35,13 @@ func Init() error {
 		return fmt.Errorf("database already initialized")
 	}
 
-	// Open the BoltDB database file
 	var err error
 	db, err = bbolt.Open(databasePath, 0600, nil)
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
 	}
 
-	// Create both buckets if they don't exist
+	// Create buckets if they don't exist
 	err = db.Update(func(tx *bbolt.Tx) error {
 		// Create bugs bucket
 		_, err := tx.CreateBucketIfNotExists(bugsBucket)
@@ -56,10 +55,15 @@ func Init() error {
 			return fmt.Errorf("create comments bucket: %w", err)
 		}
 
-		// Create counter bucket
-		_, err = tx.CreateBucketIfNotExists(counterBucket)
+		// Create and initialize counter bucket
+		b, err := tx.CreateBucketIfNotExists(counterBucket)
 		if err != nil {
 			return fmt.Errorf("create counter bucket: %w", err)
+		}
+		if b.Get([]byte("bug_id")) == nil {
+			if err := b.Put([]byte("bug_id"), itob(0)); err != nil {
+				return fmt.Errorf("initialize bug counter: %w", err)
+			}
 		}
 
 		return nil
