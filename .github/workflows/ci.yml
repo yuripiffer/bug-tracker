@@ -45,33 +45,15 @@ jobs:
       - name: Test backend
         working-directory: ./bugtracker-backend
         run: |
-          set -o pipefail
-          mkdir -p test-results
-          go test -v ./... 2>&1 | tee test-results/test-output.txt
-          go test -v ./... -json > test-results/test-report.json
-          exit ${PIPESTATUS[0]}
+          mkdir -p $(dirname test-results.json)
+          go test -v -json ./... > test-results.json
 
-      # Upload test results
-      - name: Upload test results
-        if: always() # Run even if tests fail
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-test-results
-          path: |
-            bugtracker-backend/test-results/
-          retention-days: 7
-
-      # Add test summary
-      - name: Create test summary
+      # Generate test report
+      - name: Generate test report
+        uses: guyarb/golang-test-annotations@v0.7.0
         if: always()
-        working-directory: ./bugtracker-backend
-        run: |
-          {
-            echo "## Backend Test Results"
-            echo "\`\`\`"
-            cat test-results/test-output.txt
-            echo "\`\`\`"
-          } >> $GITHUB_STEP_SUMMARY
+        with:
+          test-results: bugtracker-backend/test-results.json
 
       # Build frontend
       - name: Build frontend
