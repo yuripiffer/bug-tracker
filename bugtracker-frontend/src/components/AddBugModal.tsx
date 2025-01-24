@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Bug, Priority } from '@/types/bug';
 
 interface AddBugModalProps {
@@ -7,12 +7,32 @@ interface AddBugModalProps {
   onSubmit: (bug: Omit<Bug, 'id' | 'status'>) => void;
 }
 
+const initialFormData = {
+  title: '',
+  description: '',
+  priority: 'Medium' as const
+};
+
 export default function AddBugModal({ isOpen, onClose, onSubmit }: AddBugModalProps) {
-  const [formData, setFormData] = useState<Omit<Bug, 'id' | 'status'>>({
-    title: '',
-    description: '',
-    priority: 'Medium'
-  });
+  const [formData, setFormData] = useState<Omit<Bug, 'id' | 'status'>>(initialFormData);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setFormData(initialFormData);
+    }
+  }, [isOpen]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.title.trim() || !formData.description.trim()) {
+      return; // Don't submit if required fields are empty
+    }
+
+    onSubmit(formData);
+    onClose();
+  };
 
   if (!isOpen) return null;
 
@@ -20,16 +40,13 @@ export default function AddBugModal({ isOpen, onClose, onSubmit }: AddBugModalPr
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
       <div className="bg-white rounded-lg p-8 max-w-md w-full">
         <h2 className="text-xl font-bold mb-4">Add New Bug</h2>
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          onSubmit(formData);
-          onClose();
-        }}>
+        <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
+            <label htmlFor="title" className="block text-gray-700 text-sm font-bold mb-2">
               Title
             </label>
             <input
+              id="title"
               type="text"
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
               value={formData.title}
@@ -39,10 +56,11 @@ export default function AddBugModal({ isOpen, onClose, onSubmit }: AddBugModalPr
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
+            <label htmlFor="description" className="block text-gray-700 text-sm font-bold mb-2">
               Description
             </label>
             <textarea
+              id="description"
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -51,10 +69,11 @@ export default function AddBugModal({ isOpen, onClose, onSubmit }: AddBugModalPr
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
+            <label htmlFor="priority" className="block text-gray-700 text-sm font-bold mb-2">
               Priority
             </label>
             <select
+              id="priority"
               className="shadow border rounded w-full py-2 px-3 text-gray-700"
               value={formData.priority}
               onChange={(e) => {
