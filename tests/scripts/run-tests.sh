@@ -20,9 +20,12 @@ echo "Waiting for servers to be ready..."
 npx wait-port 3000
 
 echo "Running tests..."
-cd ../..  # Go back to root for playwright
-cd tests
-npx playwright test --config playwright.config.ts
+cd ..  # Go to tests directory
+echo "Running Playwright with args: $@"
+if [[ "$*" =~ "--headless" ]]; then
+  export CI=1
+fi
+npx playwright test --config playwright.config.ts integration.spec.ts "$@"
 
 # Clean up
 echo "Cleaning up..."
