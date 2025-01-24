@@ -14,16 +14,19 @@ import (
 )
 
 func RegisterRoutes(r *mux.Router) {
-	r.HandleFunc("/api/bugs", CreateBug).Methods("POST")
-	r.HandleFunc("/api/bugs", GetBugs).Methods("GET")
-	r.HandleFunc("/api/bugs/{id}", GetBug).Methods("GET")
-	r.HandleFunc("/api/bugs/{id}", UpdateBug).Methods("PUT")
-	r.HandleFunc("/api/bugs/{id}", DeleteBug).Methods("DELETE")
+	r.HandleFunc("/bugs", CreateBug).Methods("POST")
+	r.HandleFunc("/bugs", GetBugs).Methods("GET")
+	r.HandleFunc("/bugs/{id}", GetBug).Methods("GET")
+	r.HandleFunc("/bugs/{id}", UpdateBug).Methods("PUT")
+	r.HandleFunc("/bugs/{id}", DeleteBug).Methods("DELETE")
 	RegisterCommentRoutes(r)
-	r.HandleFunc("/api/health", HealthCheck).Methods("GET")
 }
 
 func CreateBug(w http.ResponseWriter, r *http.Request) {
+	log.Printf("CreateBug called from %s", r.RemoteAddr)
+	log.Printf("Request headers: %v", r.Header)
+	log.Printf("Request method: %s", r.Method)
+
 	var req models.CreateBugRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Printf("Failed to decode create bug request: %v", err)
@@ -66,12 +69,15 @@ func CreateBug(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetBugs(w http.ResponseWriter, r *http.Request) {
+	log.Printf("GetBugs called from %s", r.RemoteAddr)
+	log.Printf("Request headers: %v", r.Header)
 	bugs, err := db.GetAllBugs()
 	if err != nil {
+		log.Printf("Error getting bugs: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
+	log.Printf("Successfully retrieved %d bugs", len(bugs))
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(bugs)
 }
@@ -192,11 +198,4 @@ func DeleteBug(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-}
-
-func HealthCheck(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"status": "ok",
-	})
 }

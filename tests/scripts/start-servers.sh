@@ -24,6 +24,6 @@ cd ..
 
 # Wait for the frontend to be ready
 echo "Waiting for frontend server to be ready..."
-npx wait-port 3000
+npx wait-port http://localhost:3000 -t 30000
 
 echo "Server setup complete." 

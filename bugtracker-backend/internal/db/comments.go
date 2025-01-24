@@ -12,46 +12,43 @@ import (
 )
 
 func CreateComment(bugID string, comment *models.Comment) error {
-	// Convert string ID to int
-	idInt, err := strconv.Atoi(bugID)
+	comment.CreatedAt = time.Now()
+	comment.ID = int(uuid.New().ID())
+	var err error
+	comment.BugID, err = strconv.Atoi(bugID)
 	if err != nil {
 		return fmt.Errorf("invalid bug ID format")
 	}
 
-	// Check if bug exists
-	_, err = GetBug(idInt)
+	// Verify bug exists
+	_, err = GetBug(comment.BugID)
 	if err != nil {
 		return fmt.Errorf("bug not found")
 	}
-
-	comment.ID = uuid.New().String()
-	comment.CreatedAt = time.Now()
-	comment.BugID = bugID
 
 	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(commentsBucket)
 		encoded, err := json.Marshal(comment)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to marshal comment: %v", err)
 		}
-		return b.Put([]byte(comment.ID), encoded)
+		return b.Put(itob(comment.ID), encoded)
 	})
 }
 
-func GetComments(bugID string) ([]*models.Comment, error) {
-	// First verify the bug id format
-	idInt, err := strconv.Atoi(bugID)
+func GetComments(bugID string) ([]models.Comment, error) {
+	var comments []models.Comment
+	bugIDInt, err := strconv.Atoi(bugID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid bug ID format")
 	}
 
-	// Check if bug exists
-	_, err = GetBug(idInt)
+	// Verify bug exists
+	_, err = GetBug(bugIDInt)
 	if err != nil {
 		return nil, fmt.Errorf("bug not found")
 	}
 
-	var comments []*models.Comment
 	err = db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(commentsBucket)
 		return b.ForEach(func(k, v []byte) error {
@@ -59,8 +56,8 @@ func GetComments(bugID string) ([]*models.Comment, error) {
 			if err := json.Unmarshal(v, &comment); err != nil {
 				return err
 			}
-			if comment.BugID == bugID {
-				comments = append(comments, &comment)
+			if comment.BugID == bugIDInt {
+				comments = append(comments, comment)
 			}
 			return nil
 		})

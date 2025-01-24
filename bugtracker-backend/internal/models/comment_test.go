@@ -17,10 +17,10 @@ func TestCommentValidation(t *testing.T) {
 		{
 			name: "Valid comment",
 			comment: Comment{
-				ID:        "test-id",
-				BugID:     "1",
-				Author:    "Test User",
-				Content:   "Test Content",
+				ID:       1,
+				BugID:    1,
+				Author:   "Test Author",
+				Content:  "Test Content",
 				CreatedAt: time.Now(),
 			},
 			isValid: true,
@@ -28,7 +28,7 @@ func TestCommentValidation(t *testing.T) {
 		{
 			name: "Missing author",
 			comment: Comment{
-				BugID:   "1",
+				BugID:  1,
 				Content: "Test Content",
 			},
 			isValid: false,
@@ -37,8 +37,8 @@ func TestCommentValidation(t *testing.T) {
 		{
 			name: "Missing content",
 			comment: Comment{
-				BugID:  "1",
-				Author: "Test User",
+				BugID:  1,
+				Author: "Test Author",
 			},
 			isValid: false,
 			errMsg:  "content is required",
@@ -46,7 +46,7 @@ func TestCommentValidation(t *testing.T) {
 		{
 			name: "Missing bug ID",
 			comment: Comment{
-				Author:  "Test User",
+				Author:  "Test Author",
 				Content: "Test Content",
 			},
 			isValid: false,
@@ -77,7 +77,7 @@ func TestCreateCommentRequest(t *testing.T) {
 		{
 			name: "Valid request",
 			request: CreateCommentRequest{
-				Author:  "Test User",
+				Author:  "Test Author",
 				Content: "Test Content",
 			},
 			isValid: true,
@@ -93,7 +93,7 @@ func TestCreateCommentRequest(t *testing.T) {
 		{
 			name: "Missing content",
 			request: CreateCommentRequest{
-				Author: "Test User",
+				Author: "Test Author",
 			},
 			isValid: false,
 			errMsg:  "content is required",

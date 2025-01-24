@@ -13,11 +13,14 @@ echo "Cleaning up existing processes..."
 
 # Start the servers
 echo "Starting servers..."
-./start-servers.sh &
+./start-servers.sh
 
 # Wait for the servers to be ready
 echo "Waiting for servers to be ready..."
-npx wait-port 3000
+echo "Waiting for backend..."
+npx wait-port http://localhost:8080/api/health -t 30000
+echo "Waiting for frontend..."
+npx wait-port http://localhost:3000 -t 30000
 
 echo "Running tests..."
 cd ..  # Go to tests directory

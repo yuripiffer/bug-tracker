@@ -2,32 +2,22 @@ package db
 
 import (
 	"bugtracker-backend/internal/models"
-	"os"
 	"strconv"
 	"testing"
-
-	"bugtracker-backend/internal/testutil"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateComment(t *testing.T) {
-	os.Setenv("DB_PATH", testutil.GetTestDBPath())
-	defer testutil.CleanupTestDB()
-
-	err := Init()
-	assert.NoError(t, err)
-	defer func() {
-		CleanupTestDB()
-		Cleanup()
-	}()
+	cleanup := SetupTestDB(t)
+	defer cleanup()
 
 	// Create a test bug first
 	bug := &models.Bug{
 		Title:       "Test Bug",
 		Description: "Test Description",
 	}
-	err = CreateBug(bug)
+	err := CreateBug(bug)
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -78,29 +68,23 @@ func TestCreateComment(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotEmpty(t, tt.comment.ID)
 				assert.NotEmpty(t, tt.comment.CreatedAt)
-				assert.Equal(t, tt.bugID, tt.comment.BugID)
+				expectedBugID, _ := strconv.Atoi(tt.bugID)
+				assert.Equal(t, expectedBugID, tt.comment.BugID)
 			}
 		})
 	}
 }
 
 func TestGetComments(t *testing.T) {
-	os.Setenv("DB_PATH", testutil.GetTestDBPath())
-	defer testutil.CleanupTestDB()
-
-	err := Init()
-	assert.NoError(t, err)
-	defer func() {
-		CleanupTestDB()
-		Cleanup()
-	}()
+	cleanup := SetupTestDB(t)
+	defer cleanup()
 
 	// Create a bug first
 	bug := &models.Bug{
 		Title:       "Test Bug",
 		Description: "Test Description",
 	}
-	err = CreateBug(bug)
+	err := CreateBug(bug)
 	assert.NoError(t, err)
 
 	// Create test comments
