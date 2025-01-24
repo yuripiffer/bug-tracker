@@ -1,7 +1,11 @@
 # Playwright
-/test-results/
-/playwright-report/
-/playwright/.cache/
+test-results/
+playwright-report/
+playwright/.cache/
+**/test-results/
+**/playwright-report/
+**/playwright/.cache/
+**/last-run.json
 
 # Dependencies
 node_modules/
@@ -25,3 +29,6 @@ build/
 # Process files
 backend.pid
 frontend.pid
+
+# Node modules in tests directory
+/tests/node_modules/

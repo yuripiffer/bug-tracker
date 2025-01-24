@@ -7,19 +7,19 @@ echo "Cleaning up existing processes..."
 ./cleanup.sh
 
 # Clean the database
-rm -f bugtracker-backend/bugs.db
+rm -f ../../bugtracker-backend/bugs.db
 
 # Start the backend
 echo "Starting backend server..."
-cd bugtracker-backend
-go run cmd/bugtracker/main.go & echo $! > ../backend.pid
+cd ../../bugtracker-backend
+go run cmd/bugtracker/main.go & echo $! > ../tests/scripts/backend.pid
 cd ..
 
 # Start the frontend
 echo "Starting frontend server..."
 cd bugtracker-frontend
-npm install
-npm run dev & echo $! > ../frontend.pid
+cd ../tests && npm install && cd ../bugtracker-frontend
+npm run dev & echo $! > ../tests/scripts/frontend.pid
 cd ..
 
 # Wait for the frontend to be ready
