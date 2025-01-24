@@ -1,0 +1,27 @@
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+*.log
+
+# Build outputs
+dist/
+build/
+
+# Process files
+backend.pid
+frontend.pid
