@@ -151,7 +151,7 @@ export default function BugDetail() {
 
                     <CommentSection 
                         bugId={bug.id}
-                        comments={comments}
+                        comments={comments || []}
                         onCommentAdded={fetchComments}
                     />
 

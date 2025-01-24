@@ -85,7 +85,7 @@ export default function CommentSection({ bugId, comments = [], onCommentAdded }:
                 {comments.length === 0 ? (
                     <p>No comments yet.</p>
                 ) : (
-                    comments.map((comment) => (
+                    comments.map((comment: Comment) => (
                         <div key={comment.id} className="bg-gray-50 p-4 rounded-lg">
                             <div className="flex justify-between items-start">
                                 <span className="font-medium">{comment.author}</span>
@@ -100,4 +100,4 @@ export default function CommentSection({ bugId, comments = [], onCommentAdded }:
             </div>
         </div>
     );
-} 
+}
