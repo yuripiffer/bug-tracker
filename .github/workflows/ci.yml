@@ -41,6 +41,11 @@ jobs:
           go mod download
           go build -v ./...
 
+      # Run backend tests
+      - name: Test backend
+        working-directory: ./bugtracker-backend
+        run: go test -v ./...
+
       # Build frontend
       - name: Build frontend
         working-directory: ./bugtracker-frontend
