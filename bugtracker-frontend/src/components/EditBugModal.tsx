@@ -52,6 +52,7 @@ export default function EditBugModal({
             </label>
             <input
               type="text"
+              name="title"
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
               value={formData.title}
               onChange={(e) =>
@@ -66,6 +67,7 @@ export default function EditBugModal({
               Description
             </label>
             <textarea
+              name="description"
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
               value={formData.description}
               onChange={(e) =>
@@ -80,6 +82,7 @@ export default function EditBugModal({
               Status
             </label>
             <select
+              name="status"
               className="shadow border rounded w-full py-2 px-3 text-gray-700"
               value={formData.status}
               onChange={(e) =>
@@ -100,6 +103,7 @@ export default function EditBugModal({
               Priority
             </label>
             <select
+              name="priority"
               className="shadow border rounded w-full py-2 px-3 text-gray-700"
               value={formData.priority}
               onChange={(e) =>
