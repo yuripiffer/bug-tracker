@@ -64,10 +64,11 @@ jobs:
       # Add test summary
       - name: Create test summary
         if: always()
+        working-directory: ./bugtracker-backend
         run: |
           echo "## Backend Test Results" >> $GITHUB_STEP_SUMMARY
           echo "```" >> $GITHUB_STEP_SUMMARY
-          cat bugtracker-backend/test-output.txt >> $GITHUB_STEP_SUMMARY
+          cat test-output.txt >> $GITHUB_STEP_SUMMARY
           echo "```" >> $GITHUB_STEP_SUMMARY
 
       # Build frontend
