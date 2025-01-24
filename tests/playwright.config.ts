@@ -8,7 +8,7 @@ export default defineConfig({
     trace: "on-first-retry",
     headless: process.env.CI ? true : false,
     launchOptions: {
-      slowMo: 1000,
+      slowMo: process.env.CI ? 0 : 1000,
     },
   },
   timeout: 30000,
