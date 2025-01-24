@@ -1,10 +1,11 @@
 # Playwright
-/test-results/
-/playwright-report/
-/playwright/.cache/
-/tests/test-results/
-/tests/playwright-report/
-/tests/playwright/.cache/
+test-results/
+playwright-report/
+playwright/.cache/
+**/test-results/
+**/playwright-report/
+**/playwright/.cache/
+**/last-run.json
 
 # Dependencies
 node_modules/
