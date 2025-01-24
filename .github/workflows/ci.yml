@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - githubActions # Add your current branch
+  pull_request:
+    branches:
+      - main # This means it will run on any PR targeting main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Setup Go for backend
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
+          cache: true
+
+      # Setup Node.js for frontend
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: |
+            bugtracker-frontend/package-lock.json
+            tests/package-lock.json
+
+      # Build backend
+      - name: Build backend
+        working-directory: ./bugtracker-backend
+        run: |
+          go mod download
+          go build -v ./...
+
+      # Build frontend
+      - name: Build frontend
+        working-directory: ./bugtracker-frontend
+        run: |
+          npm ci
+          npm run build
