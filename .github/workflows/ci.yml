@@ -22,6 +22,7 @@ jobs:
         with:
           go-version: "1.21"
           cache: true
+          cache-dependency-path: bugtracker-backend/go.sum
 
       # Setup Node.js for frontend
       - name: Set up Node.js
