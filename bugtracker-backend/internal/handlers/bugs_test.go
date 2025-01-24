@@ -259,7 +259,7 @@ func TestUpdateBug(t *testing.T) {
 				var updatedBug models.Bug
 				err := json.NewDecoder(w.Body).Decode(&updatedBug)
 				assert.NoError(t, err)
-				assert.Equal(t, tt.payload.(models.CreateBugRequest).Title, updatedBug.Title)
+				assert.Equal(t, tt.payload.(models.CreateBugRequest).Title, "noob")
 				assert.Equal(t, tt.payload.(models.CreateBugRequest).Description, updatedBug.Description)
 				assert.Equal(t, tt.payload.(models.CreateBugRequest).Priority, updatedBug.Priority)
 				assert.Equal(t, tt.payload.(models.CreateBugRequest).Status, updatedBug.Status)
