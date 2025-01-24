@@ -45,8 +45,7 @@ jobs:
       - name: Test backend
         working-directory: ./bugtracker-backend
         run: |
-          mkdir -p $(dirname test-results.json)
-          go test -v -json -coverprofile=coverage.out -covermode=atomic ./... 2>&1 | tee test-results.json
+          go test -json -coverprofile=coverage.out -covermode=atomic ./... > test-results.json
           go tool cover -func=coverage.out > coverage.txt
           echo "## Go Test Coverage" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
