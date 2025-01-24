@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - githubActions # Add your current branch
   pull_request:
     branches:
       - main # This means it will run on any PR targeting main
