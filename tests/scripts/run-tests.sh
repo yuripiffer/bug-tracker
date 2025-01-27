@@ -1,6 +1,7 @@
 #!/bin/bash
 
 echo "Starting server setup..."
+echo "Running integration tests...."
 cd "$(dirname "$0")"  # Change to script directory
 
 # Make scripts executable
