@@ -6,16 +6,13 @@ on:
       - main
   pull_request:
     branches:
-      - main # This means it will run on any PR targeting main
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      checks: write
-      pull-requests: write
-
     steps:
       - uses: actions/checkout@v4
 
@@ -44,6 +41,59 @@ jobs:
           go mod download
           go build -v ./...
 
+      # Cache Go build artifacts
+      - name: Cache Go build
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            bugtracker-backend/go.sum
+            bugtracker-backend/go.mod
+            bugtracker-backend/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('bugtracker-backend/go.sum') }}
+
+      # Build frontend
+      - name: Build frontend
+        working-directory: ./bugtracker-frontend
+        run: |
+          npm ci
+          npm run build
+
+      # Cache npm dependencies
+      - name: Cache npm dependencies
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            bugtracker-frontend/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('bugtracker-frontend/package-lock.json') }}
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      # Restore Go cache
+      - name: Restore Go cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            bugtracker-backend/go.sum
+            bugtracker-backend/go.mod
+            bugtracker-backend/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('bugtracker-backend/go.sum') }}
+
+      # Restore npm cache
+      - name: Restore npm cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            bugtracker-frontend/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('bugtracker-frontend/package-lock.json') }}
+
       # Run backend tests
       - name: Test backend
         working-directory: ./bugtracker-backend
@@ -62,13 +112,6 @@ jobs:
         with:
           test-results: bugtracker-backend/test-results.json
           package-name: bugtracker-backend
-
-      # Build frontend
-      - name: Build frontend
-        working-directory: ./bugtracker-frontend
-        run: |
-          npm ci
-          npm run build
 
       # Run frontend tests
       - name: Test frontend
