@@ -146,6 +146,6 @@ jobs:
         uses: dorny/test-reporter@v1
         with:
           name: Integration Tests
-          path: tests/test-results/test-results.xml
+          path: tests/test-results.xml
           reporter: jest-junit
           fail-on-error: false
