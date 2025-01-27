@@ -92,6 +92,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      checks: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
 
@@ -129,11 +131,21 @@ jobs:
           chmod +x ./tests/scripts/run-tests.sh
           CI=1 ./tests/scripts/run-tests.sh
 
-      # Upload Playwright report on failure
+      # Upload Playwright report
       - name: Upload Playwright report
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           name: playwright-report
           path: tests/playwright-report
           retention-days: 30
+
+      # Publish integration test results
+      - name: Publish integration test results
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Integration Tests
+          path: tests/test-results/test-results.xml
+          reporter: jest-junit
+          fail-on-error: false
