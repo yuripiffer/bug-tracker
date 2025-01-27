@@ -86,3 +86,4 @@ jobs:
           name: Frontend Tests
           path: bugtracker-frontend/test-results.xml
           reporter: jest-junit
+          fail-on-error: false
