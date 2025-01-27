@@ -127,7 +127,7 @@ jobs:
       - name: Run integration tests
         run: |
           chmod +x ./tests/scripts/run-tests.sh
-          ./tests/scripts/run-tests.sh --headless
+          CI=1 ./tests/scripts/run-tests.sh
 
       # Upload Playwright report on failure
       - name: Upload Playwright report
