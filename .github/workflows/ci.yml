@@ -80,5 +80,5 @@ jobs:
         if: always()
         with:
           name: Frontend Tests
-          path: bugtracker-frontend/test-results.json
-          reporter: jest-json
+          path: bugtracker-frontend/test-results.xml
+          reporter: jest-junit

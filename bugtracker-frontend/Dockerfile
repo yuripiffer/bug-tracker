@@ -11,6 +11,9 @@ RUN npm install
 # Copy source code
 COPY . .
 
+# Exclude test reports
+RUN echo "test-results.xml" >> .dockerignore
+
 # Build the Next.js app
 RUN npm run build
 
