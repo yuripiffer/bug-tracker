@@ -12,5 +12,9 @@ export default defineConfig({
     },
   },
   timeout: 30000,
-  reporter: "list",
+  reporter: [
+    ["list"],
+    ["junit", { outputFile: "test-results.xml" }],
+    ["html", { outputFolder: "playwright-report" }],
+  ],
 });

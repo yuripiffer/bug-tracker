@@ -6,6 +6,7 @@ playwright/.cache/
 **/playwright-report/
 **/playwright/.cache/
 **/last-run.json
+**/test-results.xml
 
 # Dependencies
 node_modules/
