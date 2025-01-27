@@ -6,12 +6,15 @@ on:
       - main
   pull_request:
     branches:
-      - main # This means it will run on any PR targeting main
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
 
@@ -33,7 +36,7 @@ jobs:
             bugtracker-frontend/package-lock.json
             tests/package-lock.json
 
-      # Build backend
+      # Build and test backend
       - name: Build backend
         working-directory: ./bugtracker-backend
         run: |
@@ -51,8 +54,8 @@ jobs:
           cat coverage.txt >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
-      # Generate test report
-      - name: Generate test report
+      # Generate backend test report
+      - name: Generate backend test report
         uses: guyarb/golang-test-annotations@v0.7.0
         if: always()
         with:
@@ -65,3 +68,21 @@ jobs:
         run: |
           npm ci
           npm run build
+
+      # Run frontend tests
+      - name: Test frontend
+        working-directory: ./bugtracker-frontend
+        run: |
+          npm test
+        env:
+          CI: true
+
+      # Publish frontend test results
+      - name: Publish frontend test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Frontend Tests
+          path: bugtracker-frontend/test-results.xml
+          reporter: jest-junit
+          fail-on-error: false
