@@ -31,11 +31,7 @@ services:
     networks:
       - bugtracker
     healthcheck:
-      test:
-        - "CMD"
-        - "/bin/sh"
-        - "-c"
-        - "sleep 2 && wget -O - http://localhost:8080/api/health 2>&1 | tee /dev/stderr || exit 1"
+      test: ["CMD", "wget", "-O", "-", "http://localhost:8080/api/health"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -44,3 +40,19 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  tests:
+    build:
+      context: ./tests
+      dockerfile: Dockerfile
+    environment:
+      - PLAYWRIGHT_TEST_BASE_URL=http://frontend:3000
+      - API_BASE_URL=http://backend:8080
+      - CI=1
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    networks:
+      - bugtracker
