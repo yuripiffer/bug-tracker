@@ -51,7 +51,7 @@ services:
       - CI=1
     volumes:
       - ./tests/playwright-report:/tests/playwright-report
-      - ./tests/test-results.xml:/tests/test-results.xml
+      - ./tests/test-results:/tests/test-results
     depends_on:
       frontend:
         condition: service_healthy

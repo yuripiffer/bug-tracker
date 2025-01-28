@@ -102,7 +102,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: test-results
-          path: ./tests/test-results.xml
+          path: ./tests/test-results/*.xml
           retention-days: 30
 
       - name: Publish test results
