@@ -79,10 +79,14 @@ jobs:
       - name: Run integration tests
         run: |
           docker-compose up --build --abort-on-container-exit tests || true
-          EXIT_CODE=$(docker-compose ps -q tests | xargs docker inspect -f '{{ .State.ExitCode }}')
+          # Capture exit code before docker-compose down
+          EXIT_CODE=$(docker-compose ps -q tests | xargs -r docker inspect -f '{{ .State.ExitCode }}')
+          # Store exit code since it will be lost after down
+          echo $EXIT_CODE > .exit_code
           docker-compose down
-          if [ "$EXIT_CODE" != "0" ]; then
-            exit $EXIT_CODE
+          # Read stored exit code
+          if [ "$(cat .exit_code)" != "0" ]; then
+            exit $(cat .exit_code)
           fi
 
       - name: Upload Playwright report
