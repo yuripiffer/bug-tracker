@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Comment } from "@/types/comment";
+import { API_BASE_URL } from "@/config";
 
 interface CommentSectionProps {
   bugId: number;
@@ -22,7 +23,7 @@ export default function CommentSection({
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/bugs/${bugId}/comments`,
+        `${API_BASE_URL}/api/bugs/${bugId}/comments`,
         {
           method: "POST",
           headers: {
