@@ -68,11 +68,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Ensure Docker Compose is available
+      # Use GitHub's Docker Compose setup action
       - name: Set up Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose-plugin
+        uses: ndeloof/install-compose-action@v0.0.1
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
