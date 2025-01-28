@@ -2,23 +2,22 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
-  build:
+  unit-tests:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       checks: write
       pull-requests: write
+
     steps:
       - uses: actions/checkout@v4
 
-      # Setup Go for backend
+      # Backend tests
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
@@ -26,35 +25,12 @@ jobs:
           cache: true
           cache-dependency-path: bugtracker-backend/go.sum
 
-      # Setup Node.js for frontend
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: |
-            bugtracker-frontend/package-lock.json
-            tests/package-lock.json
-
-      # Build and test backend
-      - name: Build backend
-        working-directory: ./bugtracker-backend
-        run: |
-          go mod download
-          go build -v ./...
-
-      # Run backend tests
       - name: Test backend
         working-directory: ./bugtracker-backend
         run: |
           go test -json -coverprofile=coverage.out -covermode=atomic ./... > test-results.json
           go tool cover -func=coverage.out > coverage.txt
-          echo "## Go Test Coverage" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          cat coverage.txt >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
-      # Generate backend test report
       - name: Generate backend test report
         uses: guyarb/golang-test-annotations@v0.7.0
         if: always()
@@ -62,22 +38,18 @@ jobs:
           test-results: bugtracker-backend/test-results.json
           package-name: bugtracker-backend
 
-      # Build frontend
-      - name: Build frontend
-        working-directory: ./bugtracker-frontend
-        run: |
-          npm ci
-          npm run build
+      # Frontend tests
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: bugtracker-frontend/package-lock.json
 
-      # Run frontend tests
       - name: Test frontend
         working-directory: ./bugtracker-frontend
-        run: |
-          npm test
-        env:
-          CI: true
+        run: npm ci && npm test
 
-      # Publish frontend test results
       - name: Publish frontend test results
         uses: dorny/test-reporter@v1
         if: always()
@@ -85,67 +57,58 @@ jobs:
           name: Frontend Tests
           path: bugtracker-frontend/test-results.xml
           reporter: jest-junit
-          fail-on-error: false
 
   integration-tests:
-    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read
       checks: write
       pull-requests: write
+
     steps:
       - uses: actions/checkout@v4
 
-      # Setup Go for backend
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: "1.21"
-          cache: true
-          cache-dependency-path: bugtracker-backend/go.sum
+      # Use GitHub's Docker Compose setup action
+      - name: Set up Docker Compose
+        uses: ndeloof/install-compose-action@v0.0.1
 
-      # Setup Node.js
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: |
-            bugtracker-frontend/package-lock.json
-            tests/package-lock.json
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # Install dependencies
-      - name: Install dependencies
-        run: |
-          cd bugtracker-frontend && npm ci
-          cd ../tests && npm ci
-
-      # Install Playwright browsers
-      - name: Install Playwright browsers
-        run: cd tests && npx playwright install --with-deps
-
-      # Run integration tests
+      # Run tests with proper error handling
       - name: Run integration tests
         run: |
-          chmod +x ./tests/scripts/run-tests.sh
-          CI=1 ./tests/scripts/run-tests.sh
+          docker-compose up --build --abort-on-container-exit tests || true
+          # Capture exit code before docker-compose down
+          EXIT_CODE=$(docker-compose ps -q tests | xargs -r docker inspect -f '{{ .State.ExitCode }}')
+          # Store exit code since it will be lost after down
+          echo $EXIT_CODE > .exit_code
+          docker-compose down
+          # Read stored exit code
+          if [ "$(cat .exit_code)" != "0" ]; then
+            exit $(cat .exit_code)
+          fi
 
-      # Upload Playwright report
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: playwright-report
-          path: tests/playwright-report
+          path: ./tests/playwright-report/
           retention-days: 30
 
-      # Publish integration test results
-      - name: Publish integration test results
+      - name: Upload test results
         if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: ./tests/test-results/*.xml
+          retention-days: 30
+
+      - name: Publish test results
         uses: dorny/test-reporter@v1
+        if: always()
         with:
           name: Integration Tests
-          path: tests/test-results.xml
+          path: ./tests/test-results/*.xml
           reporter: jest-junit
-          fail-on-error: false
