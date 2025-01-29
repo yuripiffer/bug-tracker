@@ -96,6 +96,10 @@ jobs:
           path: ./tests-api/test-results/
           retention-days: 30
 
+      # Configure Git for container
+      - name: Configure Git
+        run: git config --global --add safe.directory /__w/bug-tracker/bug-tracker
+
       # Publish test results
       - name: Publish API test results
         uses: dorny/test-reporter@v1
