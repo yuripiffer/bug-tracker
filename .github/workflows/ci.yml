@@ -193,7 +193,7 @@ jobs:
       - name: Run local k6 test
         uses: grafana/run-k6-action@v1
         with:
-          filename: tests-perf/script.js
+          path: tests-perf/script.js
           flags: --out json=tests-perf/test-results.json
 
       - name: Create k6 report
