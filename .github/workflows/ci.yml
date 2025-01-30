@@ -194,4 +194,3 @@ jobs:
         uses: grafana/run-k6-action@v1
         with:
           path: tests-perf/script.js
-          flags: --out json=test-results/raw-perf-test-results.json
