@@ -194,18 +194,4 @@ jobs:
         uses: grafana/run-k6-action@v1
         with:
           path: tests-perf/script.js
-          flags: --out json=tests-perf/test-results.json
-
-      - name: Create k6 report
-        uses: benc-uk/workflow-dispatch@v1
-        with:
-          workflow: k6-report
-          token: ${{ secrets.GITHUB_TOKEN }}
-          inputs: '{"json_path": "tests-perf/test-results.json"}'
-
-      - name: Upload k6 report
-        uses: actions/upload-artifact@v3
-        with:
-          name: k6-report
-          path: tests-perf/summary.html
-          retention-days: 30
+          flags: --out json=tests-perf/test-results/raw-perf-test-results.json
