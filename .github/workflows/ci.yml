@@ -194,3 +194,11 @@ jobs:
         uses: grafana/run-k6-action@v1
         with:
           path: tests-perf/script.js
+
+      - name: Upload performance HTML report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: performance-report
+          path: tests-perf/perf-results.html
+          retention-days: 30
