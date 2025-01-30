@@ -43,7 +43,7 @@ export default function () {
 
 export function handleSummary(data) {
   return {
-    "test-results/perf-results.html": htmlReport(data),
+    "perf-results.html": htmlReport(data),
     stdout: textSummary(data, { indent: " ", enableColors: true }),
   };
 }
