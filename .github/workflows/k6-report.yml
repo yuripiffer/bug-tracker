@@ -1,0 +1,40 @@
+name: K6 Report
+
+on:
+  workflow_dispatch:
+    inputs:
+      json_path:
+        description: "Path to k6 JSON results"
+        required: true
+        type: string
+
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download k6 results
+        uses: actions/download-artifact@v3
+        with:
+          name: k6-results
+          path: k6-results
+
+      - name: Generate HTML report
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const k6Report = require('k6-html-reporter');
+            const options = {
+              jsonFile: process.env.JSON_PATH,
+              output: 'summary.html',
+            };
+            k6Report.generateSummary(options);
+        env:
+          JSON_PATH: ${{ inputs.json_path }}
+
+      - name: Upload report
+        uses: actions/upload-artifact@v3
+        with:
+          name: k6-report
+          path: summary.html
