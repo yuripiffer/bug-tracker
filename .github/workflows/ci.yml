@@ -164,3 +164,50 @@ jobs:
           name: Integration Tests
           path: ./tests/test-results/*.xml
           reporter: jest-junit
+
+  perf-tests:
+    needs: api-tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+      pages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Start backend server
+      - name: Start backend server
+        run: |
+          apt-get update && apt-get install -y golang-go
+          cd bugtracker-backend
+          nohup go run cmd/bugtracker/main.go > server.log 2>&1 &
+          cd ../tests-api
+          npx wait-port http://localhost:8080/api/health -t 30000
+
+      - name: Setup K6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Run local k6 test
+        uses: grafana/run-k6-action@v1
+        with:
+          path: tests-perf/script.js
+          flags: --out json=summary.json
+
+      - name: Upload performance HTML report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: performance-report
+          path: perf-results.html
+          retention-days: 30
+
+      - name: Upload performance Raw Results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: performance-raw-results
+          path: summary.json
+          retention-days: 30
