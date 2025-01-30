@@ -21,7 +21,7 @@ npx wait-port http://localhost:8080/api/health -t 30000
 
 echo "Running k6 performance tests..."
 cd ..  # Go to tests-perf directory
-k6 run script.js
+k6 run --out json=test-results.json script.js
 
 # Store the exit code
 TEST_EXIT_CODE=$?
