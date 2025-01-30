@@ -8,6 +8,7 @@ playwright/.cache/
 **/last-run.json
 **/test-results.xml
 **/test-results.json
+tests-perf/test-results/*
 
 # Dependencies
 node_modules/
