@@ -36,6 +36,7 @@ pipeline {
                 docker {
                     image 'golang:1.21-alpine'
                     reuseNode true
+                    args '-u root' // Run as root to install packages
                 }
             }
             
