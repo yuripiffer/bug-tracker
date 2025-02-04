@@ -17,8 +17,14 @@ pipeline {
                 }
             }
             steps {
-                sh 'go version'
-                sh 'go build -o bugtracker-backend'
+                dir('bugtracker-backend') {
+                    sh '''
+                        pwd
+                        ls -la
+                        go version
+                        go build -o bugtracker-backend cmd/bugtracker/main.go
+                    '''
+                }
             }
         }
     }
