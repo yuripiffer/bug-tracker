@@ -32,8 +32,33 @@ pipeline {
         }
 
         stage ('Test') {
+            agent {
+                docker {
+                    image 'golang:1.21-alpine'
+                    reuseNode true
+                }
+            }
+            
             steps {
-                echo 'Test stage'
+                dir('bugtracker-backend') {
+                    sh '''
+                        export GOCACHE="$PWD/.cache"
+                        mkdir -p "$GOCACHE"
+                        
+                        # Run tests with JSON output and coverage
+                        go test -json -coverprofile=coverage.out -covermode=atomic ./... > test-results.json
+                        
+                        # Generate coverage report
+                        go tool cover -func=coverage.out > coverage.txt
+                    '''
+                }
+            }
+            post {
+                always {
+                    dir('bugtracker-backend') {
+                        archiveArtifacts artifacts: '**/test-results.json,**/coverage.out,**/coverage.txt', allowEmptyArchive: true
+                    }
+                }
             }
         }
     }
