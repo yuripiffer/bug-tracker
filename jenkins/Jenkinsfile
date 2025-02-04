@@ -33,6 +33,7 @@ pipeline {
                 docker {
                     image 'snakee/golang-junit:1.21' // using custom image with junit installed
                     reuseNode true
+                    alwaysPull true  // Force pull the latest image
                 }
             }
             
