@@ -39,6 +39,9 @@ pipeline {
             steps {
                 dir('bugtracker-backend') {
                     sh '''
+                        # Clean up any existing files
+                        rm -f coverage.html coverage.out report.xml
+
                         # Debug information
                         echo "Current user:"
                         id
