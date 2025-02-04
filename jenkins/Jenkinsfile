@@ -31,7 +31,7 @@ pipeline {
         stage ('Test') {
             agent {
                 docker {
-                    image 'snakee/golang-junit:1.22' // using custom image with junit installed
+                    image 'snakee/golang-junit:1.21' // using custom image with junit installed
                     reuseNode true
                 }
             }
