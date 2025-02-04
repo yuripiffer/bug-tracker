@@ -19,8 +19,8 @@ pipeline {
             steps {
                 dir('bugtracker-backend') {
                     sh '''
-                        export GOCACHE=$(pwd)/.cache
-                        mkdir -p $GOCACHE
+                        export GOCACHE="$PWD/.cache"
+                        mkdir -p "$GOCACHE"
                         pwd
                         ls -la
                         go version
