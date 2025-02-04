@@ -24,6 +24,13 @@ pipeline {
                         go build -o bugtracker-backend cmd/bugtracker/main.go
                         ls -la
                     '''
+
+                    sh '''
+                        echo "=== Docker Image List ==="
+                        docker images
+                        echo "=== Build Cache ==="
+                        docker builder prune --dry-run --filter type=exec.cachemount
+                    '''
                 }
             }
         }
@@ -38,6 +45,14 @@ pipeline {
             
             steps {
                 dir('bugtracker-backend') {
+                    sh '''
+                        echo "=== Docker Image List ==="
+                        docker images
+                        echo "=== Build Cache ==="
+                        docker builder prune --dry-run --filter type=exec.cachemount
+                    '''
+
+
                     sh '''
                         # Verify environment
                         echo "GOMODCACHE: $GOMODCACHE"
@@ -64,12 +79,6 @@ pipeline {
                         reportFiles: 'coverage.html',
                         reportName: 'Coverage Report'
                     ]
-                    sh '''
-                        echo "=== Docker Image List ==="
-                        docker images
-                        echo "=== Build Cache ==="
-                        docker builder prune --dry-run --filter type=exec.cachemount
-                    '''
                 }
             }
         }
