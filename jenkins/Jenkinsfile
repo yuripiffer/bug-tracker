@@ -31,9 +31,8 @@ pipeline {
         stage ('Test') {
             agent {
                 docker {
-                    image 'golang:1.21-alpine'
+                    image 'snakee/golang-junit:1.21' // using custom image with junit installed
                     reuseNode true
-                    args '-u root' // Run as root to install packages
                 }
             }
             
@@ -42,8 +41,6 @@ pipeline {
                     sh '''
                         export PATH="$PATH:/root/go/bin"
                         export GOCACHE="$PWD/.cache"
-                        apk add --no-cache git
-                        go install github.com/jstemmer/go-junit-report/v2@latest
 
                         # Run tests with JUnit XML output
                         go test -v ./... 2>&1 | go-junit-report -set-exit-code > report.xml
