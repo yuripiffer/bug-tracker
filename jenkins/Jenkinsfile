@@ -45,8 +45,9 @@ pipeline {
                         export GOCACHE="$PWD/.cache"
                         mkdir -p "$GOCACHE"
                         
-                        # Run tests with JSON output and coverage
-                        go test -json -coverprofile=coverage.out -covermode=atomic ./... > test-results.json
+                        # Run tests with JSON output and coverage, showing output in console
+                        go test -v ./... | tee test.log  # Run tests with verbose output for console
+                        go test -json -coverprofile=coverage.out -covermode=atomic ./... > test-results.json  # Run tests again for JSON output
                         
                         # Generate coverage report
                         go tool cover -func=coverage.out > coverage.txt
@@ -56,7 +57,7 @@ pipeline {
             post {
                 always {
                     dir('bugtracker-backend') {
-                        archiveArtifacts artifacts: '**/test-results.json,**/coverage.out,**/coverage.txt', allowEmptyArchive: true
+                        archiveArtifacts artifacts: '**/test-results.json,**/coverage.out,**/coverage.txt,**/test.log', allowEmptyArchive: true
                     }
                 }
             }
