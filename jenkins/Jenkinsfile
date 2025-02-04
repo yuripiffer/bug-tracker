@@ -64,6 +64,12 @@ pipeline {
                         reportFiles: 'coverage.html',
                         reportName: 'Coverage Report'
                     ]
+                    sh '''
+                        echo "=== Docker Image List ==="
+                        docker images
+                        echo "=== Build Cache ==="
+                        docker builder prune --dry-run --filter type=exec.cachemount
+                    '''
                 }
             }
         }
