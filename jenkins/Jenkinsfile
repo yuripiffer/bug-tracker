@@ -22,7 +22,6 @@ pipeline {
                         export GOCACHE="$PWD/.cache"
                         mkdir -p "$GOCACHE"
                         go build -o bugtracker-backend cmd/bugtracker/main.go
-                        ls -la
                     '''
                 }
             }
@@ -31,9 +30,9 @@ pipeline {
         stage ('Test') {
             agent {
                 docker {
-                    image 'snakee/golang-junit:1.21' // using custom image with junit installed
+                    image 'snakee/golang-junit:1.21'
                     reuseNode true
-                    alwaysPull true  // Force pull the latest image
+                    alwaysPull true
                 }
             }
             
@@ -43,24 +42,6 @@ pipeline {
                         # Clean up any existing files
                         rm -f coverage.html coverage.out report.xml
 
-                        # Debug information
-                        echo "Current user:"
-                        id
-                        
-                        echo "Permissions of key directories:"
-                        ls -la /go
-                        ls -la /go/pkg
-                        ls -la /go/pkg/mod
-                        
-                        echo "Go environment:"
-                        go env
-                        
-                        echo "Current directory structure:"
-                        pwd
-                        ls -la
-                        
-                        # Original test commands
-                        echo "Running tests..."
                         go test -v ./... 2>&1 | go-junit-report -set-exit-code > report.xml
                                                 
                         # Generate coverage report
