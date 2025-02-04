@@ -14,11 +14,14 @@ pipeline {
                 docker {
                     image 'golang:1.21-alpine'
                     reuseNode true
+                    args '-v ${WORKSPACE}/.cache:/.cache'
                 }
             }
             steps {
                 dir('bugtracker-backend') {
                     sh '''
+                        mkdir -p /.cache
+                        chmod 777 /.cache
                         pwd
                         ls -la
                         go version
