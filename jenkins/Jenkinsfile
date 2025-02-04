@@ -8,21 +8,60 @@ pipeline {
                 sh 'touch container-no.txt'
             }
         }
-        
-        stage('w/ docker') {
+
+        stage('Build') {
             agent {
                 docker {
-                    image 'node:18-alpine'
+                    image 'golang:1.21-alpine'
                     reuseNode true
                 }
             }
             steps {
-                sh 'echo "With docker"'
-                sh 'npm --version'
-                sh '''
-                    ls -la
-                    touch container-yes.txt
-                '''
+                dir('bugtracker-backend') {
+                    sh '''
+                        export GOCACHE="$PWD/.cache"
+                        mkdir -p "$GOCACHE"
+                        go build -o bugtracker-backend cmd/bugtracker/main.go
+                    '''
+                }
+            }
+        }
+
+        stage ('Test') {
+            agent {
+                docker {
+                    image 'snakee/golang-junit:1.21'
+                    reuseNode true
+                    alwaysPull true
+                }
+            }
+            
+            steps {
+                dir('bugtracker-backend') {
+                    sh '''
+                        # Clean up any existing files
+                        rm -f coverage.html coverage.out report.xml
+
+                        go test -v ./... 2>&1 | go-junit-report -set-exit-code > report.xml
+                                                
+                        # Generate coverage report
+                        go test -coverprofile=coverage.out -covermode=atomic ./...
+                        go tool cover -html=coverage.out -o coverage.html
+                    '''
+                }
+            }
+            post {
+                always {
+                    junit 'bugtracker-backend/report.xml'
+                    publishHTML target: [
+                        allowMissing: true, 
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'bugtracker-backend',
+                        reportFiles: 'coverage.html',
+                        reportName: 'Coverage Report'
+                    ]
+                }
             }
         }
     }
