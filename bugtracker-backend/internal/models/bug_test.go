@@ -107,7 +107,7 @@ func TestCreateBugRequest(t *testing.T) {
 				assert.NoError(t, err)
 			} else {
 				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tt.errMsg + "noob")
+				assert.Contains(t, err.Error(), tt.errMsg)
 			}
 		})
 	}
