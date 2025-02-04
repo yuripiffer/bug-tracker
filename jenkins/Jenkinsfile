@@ -42,6 +42,7 @@ pipeline {
                         # Verify environment
                         echo "GOMODCACHE: $GOMODCACHE"
                         go env GOMODCACHE
+                        ls -ld $GOMODCACHE
 
                         # Run tests with JUnit XML output
                         go test -v ./... 2>&1 | go-junit-report -set-exit-code > report.xml
