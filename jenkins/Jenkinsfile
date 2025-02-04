@@ -14,16 +14,16 @@ pipeline {
                 docker {
                     image 'golang:1.21-alpine'
                     reuseNode true
+                    args '--entrypoint=""' // Needed for tool installation
                 }
             }
             steps {
                 dir('bugtracker-backend') {
                     sh '''
+                        apk add --no-cache git
+                        go install github.com/jstemmer/go-junit-report/v2@latest
                         export GOCACHE="$PWD/.cache"
                         mkdir -p "$GOCACHE"
-                        pwd
-                        ls -la
-                        go version
                         go build -o bugtracker-backend cmd/bugtracker/main.go
                         ls -la
                     '''
@@ -42,23 +42,23 @@ pipeline {
             steps {
                 dir('bugtracker-backend') {
                     sh '''
+                        export PATH="$PATH:/root/go/bin"
                         export GOCACHE="$PWD/.cache"
-                        mkdir -p "$GOCACHE"
-                        
-                        # Run tests with JSON output and coverage, showing output in console
-                        go test -v ./... | tee test.log  # Run tests with verbose output for console
-                        go test -json -coverprofile=coverage.out -covermode=atomic ./... > test-results.json  # Run tests again for JSON output
-                        
+
+                        # Run tests with JUnit XML output
+                        go test -v ./... 2>&1 | go-junit-report -set-exit-code > report.xml
+                                                
                         # Generate coverage report
-                        go tool cover -func=coverage.out > coverage.txt
+                        go test -coverprofile=coverage.out -covermode=atomic ./...
+                        go tool cover -html=coverage.out -o coverage.html
                     '''
                 }
             }
             post {
                 always {
-                    dir('bugtracker-backend') {
-                        archiveArtifacts artifacts: '**/test-results.json,**/coverage.out,**/coverage.txt,**/test.log', allowEmptyArchive: true
-                    }
+                    junit 'bugtracker-backend/report.xml'  // JUnit test reporting [1][5]
+                    cobertura coberturaReportFile: 'bugtracker-backend/coverage.out'  // Coverage reporting [12]
+                    archiveArtifacts artifacts: 'bugtracker-backend/coverage.html', allowEmptyArchive: true
                 }
             }
         }
