@@ -25,6 +25,7 @@ pipeline {
                         ls -la
                         go version
                         go build -o bugtracker-backend cmd/bugtracker/main.go
+                        ls -la
                     '''
                 }
             }
