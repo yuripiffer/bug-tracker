@@ -39,8 +39,9 @@ pipeline {
             steps {
                 dir('bugtracker-backend') {
                     sh '''
-                        export PATH="$PATH:/root/go/bin"
-                        export GOCACHE="$PWD/.cache"
+                        # Verify environment
+                        echo "GOMODCACHE: $GOMODCACHE"
+                        go env GOMODCACHE
 
                         # Run tests with JUnit XML output
                         go test -v ./... 2>&1 | go-junit-report -set-exit-code > report.xml
