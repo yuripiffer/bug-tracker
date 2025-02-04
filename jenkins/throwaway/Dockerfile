@@ -24,7 +24,7 @@ ENV GOMODCACHE=/go/pkg/mod
 ENV GOCACHE=/home/appuser/.cache/go-build
 ENV PATH=$PATH:/home/appuser/go/bin
 
-# Set working directory (separate from user home)
+# Set working directory
 WORKDIR /app
 
 # Switch to non-root user
