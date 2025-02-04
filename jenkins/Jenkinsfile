@@ -8,21 +8,17 @@ pipeline {
                 sh 'touch container-no.txt'
             }
         }
-        
-        stage('w/ docker') {
+
+        stage('Build') {
             agent {
                 docker {
-                    image 'node:18-alpine'
+                    image 'golang:1.21-alpine'
                     reuseNode true
                 }
             }
             steps {
-                sh 'echo "With docker"'
-                sh 'npm --version'
-                sh '''
-                    ls -la
-                    touch container-yes.txt
-                '''
+                sh 'go version'
+                sh 'go build -o bugtracker-backend'
             }
         }
     }
