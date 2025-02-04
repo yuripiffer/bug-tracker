@@ -12,9 +12,11 @@ RUN adduser -D -u 1000 appuser && \
     mkdir -p /home/appuser/go/pkg/mod && \
     mkdir -p /home/appuser/.cache/go-build && \
     mkdir -p /go/pkg/mod && \
+    mkdir -p /go/pkg/mod/cache && \
+    mkdir -p /go/pkg/mod/cache/download && \
     chown -R appuser:appuser /home/appuser && \
-    chown -R appuser:appuser /go/pkg/mod && \
-    chmod -R 777 /go/pkg/mod
+    chown -R appuser:appuser /go && \
+    chmod -R 777 /go
 
 # Configure environment variables
 ENV GOPATH=/home/appuser/go

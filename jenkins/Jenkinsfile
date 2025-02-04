@@ -31,7 +31,7 @@ pipeline {
         stage ('Test') {
             agent {
                 docker {
-                    image 'snakee/golang-junit:1.21' // using custom image with junit installed
+                    image 'snakee/golang-junit:1.22' // using custom image with junit installed
                     reuseNode true
                 }
             }
@@ -39,12 +39,24 @@ pipeline {
             steps {
                 dir('bugtracker-backend') {
                     sh '''
-                        # Verify environment
-                        echo "GOMODCACHE: $GOMODCACHE"
-                        go env GOMODCACHE
-                        ls -ld $GOMODCACHE
-
-                        # Run tests with JUnit XML output
+                        # Debug information
+                        echo "Current user:"
+                        id
+                        
+                        echo "Permissions of key directories:"
+                        ls -la /go
+                        ls -la /go/pkg
+                        ls -la /go/pkg/mod
+                        
+                        echo "Go environment:"
+                        go env
+                        
+                        echo "Current directory structure:"
+                        pwd
+                        ls -la
+                        
+                        # Original test commands
+                        echo "Running tests..."
                         go test -v ./... 2>&1 | go-junit-report -set-exit-code > report.xml
                                                 
                         # Generate coverage report
