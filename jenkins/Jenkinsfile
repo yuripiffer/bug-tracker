@@ -56,9 +56,15 @@ pipeline {
             }
             post {
                 always {
-                    junit 'bugtracker-backend/report.xml'  // JUnit test reporting [1][5]
-                    cobertura coberturaReportFile: 'bugtracker-backend/coverage.out'  // Coverage reporting [12]
-                    archiveArtifacts artifacts: 'bugtracker-backend/coverage.html', allowEmptyArchive: true
+                    junit 'bugtracker-backend/report.xml'
+                    publishHTML target: [
+                        allowMissing: true, 
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'bugtracker-backend',
+                        reportFiles: 'coverage.html',
+                        reportName: 'Coverage Report'
+                    ]
                 }
             }
         }
