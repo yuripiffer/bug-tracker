@@ -12,7 +12,7 @@ RUN npm install
 COPY . .
 
 # Set the API URL at build time
-ENV NEXT_PUBLIC_API_URL=http://backend:8080
+ENV NEXT_PUBLIC_API_URL=http://localhost:8080
 
 # Exclude test reports
 RUN echo "test-results.xml" >> .dockerignore
