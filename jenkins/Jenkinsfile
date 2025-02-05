@@ -2,25 +2,13 @@ pipeline {
     agent any
 
     stages {
-        // stage('Build Backend') {
-        //     agent {
-        //         docker {
-        //             image 'golang:1.21-alpine'
-        //             reuseNode true
-        //         }
-        //     }
-        //     steps {
-        //         dir('bugtracker-backend') {
-        //             sh '''
-        //                 export GOCACHE="$PWD/.cache"
-        //                 mkdir -p "$GOCACHE"
-        //                 go build -o bugtracker-backend cmd/bugtracker/main.go
-        //             '''
-        //         }
-        //     }
-        // }
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
 
-        stage ('Test Backend') {
+        stage('Test Backend') {
             agent {
                 docker {
                     image 'snakee/golang-junit:1.21'
@@ -28,7 +16,7 @@ pipeline {
                     alwaysPull true
                 }
             }
-            
+
             steps {
                 dir('bugtracker-backend') {
                     sh '''
@@ -36,7 +24,7 @@ pipeline {
                         rm -f coverage.html coverage.out report.xml
 
                         go test -v ./... 2>&1 | go-junit-report -set-exit-code > report.xml
-                                                
+
                         # Generate coverage report
                         go test -coverprofile=coverage.out -covermode=atomic ./...
                         go tool cover -html=coverage.out -o coverage.html
@@ -47,7 +35,7 @@ pipeline {
                 always {
                     junit 'bugtracker-backend/report.xml'
                     publishHTML target: [
-                        allowMissing: true, 
+                        allowMissing: true,
                         alwaysLinkToLastBuild: true,
                         keepAll: true,
                         reportDir: 'bugtracker-backend',
@@ -82,40 +70,43 @@ pipeline {
                 docker {
                     image 'mcr.microsoft.com/playwright:v1.50.0-jammy'
                     reuseNode true
-                    args '-u 0'  // Runs container as root
+                    args '-u 0 --network host -v $WORKSPACE:$WORKSPACE'  // Runs container as root
                 }
             }
             steps {
-                // Install Go
-                sh 'apt-get update && apt-get install -y golang-go'
+                dir("${env.WORKSPACE}") {
+                    // Install Go
+                    sh 'apt-get update && apt-get install -y golang-go'
 
-                // Start the backend server in the background
-                dir('bugtracker-backend') {
-                    sh '''
+                    // Start the backend server in the background
+                    dir('bugtracker-backend') {
+                        sh '''
                     nohup go run cmd/bugtracker/main.go > server.log 2>&1 &
                     '''
-                }
+                    }
 
-                dir('tests-api') {
-                    // Wait for the backend health endpoint to be available
-                    sh 'npx wait-port http://localhost:8080/api/health -t 30000'
+                    dir('tests-api') {
+                        // Wait for the backend health endpoint to be available
+                        sh 'npx wait-port http://localhost:8080/api/health -t 30000'
 
-                    // Install dependencies and run tests
-                    sh 'npm ci'
-                    sh 'npm test'
-                }
-            }
-            post {
-                always {
-                    junit 'tests-api/test-results/results.xml'
-                    publishHTML target: [
+                        // Install dependencies and run tests
+                        sh 'npm ci'
+                        sh 'npm test'
+                    }
+
+                    post {
+                        always {
+                            junit 'tests-api/test-results/results.xml'
+                            publishHTML target: [
                         allowMissing: true,
                         alwaysLinkToLastBuild: true,
                         keepAll: true,
                         reportDir: 'tests-api/playwright-report',
                         reportFiles: 'index.html',
                         reportName: 'Playwright API Test Report'
-                    ]
+                        ]
+                        }
+                    }
                 }
             }
         }
