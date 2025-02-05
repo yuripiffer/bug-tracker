@@ -67,11 +67,12 @@ pipeline {
             steps {
                 dir('bugtracker-frontend') {
                     sh 'npm ci'
-                    sh 'npm test -- --listTests'
+                    sh 'npm test -- --reporters=default --reporters=jest-junit'
                 }
             }
             post {
                 always {
+                    junit 'bugtracker-frontend/test-results.xml'
                     cleanWs()
                 }
             }
