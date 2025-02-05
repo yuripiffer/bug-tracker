@@ -82,7 +82,12 @@ pipeline {
                 sh 'apt-get update && apt-get install -y golang-go'
 
                 // Start the backend server in the background
-                dir('bugtracker-backend') {
+                dir("${env.WORKSPACE}/bugtracker-backend") {
+                    sh '''
+                        echo "Verifying file structure:"
+                        ls -l cmd/bugtracker/main.go
+                    '''
+
                     sh '''
                     nohup go run cmd/bugtracker/main.go > server.log 2>&1 &
                     '''
