@@ -100,19 +100,19 @@ pipeline {
                     sh 'npm ci'
                     sh 'npm test'
                 }
+            }
 
-                post {
-                    always {
-                        junit 'tests-api/test-results/results.xml'
-                        publishHTML target: [
-                            allowMissing: true,
-                            alwaysLinkToLastBuild: true,
-                            keepAll: true,
-                            reportDir: 'tests-api/playwright-report',
-                            reportFiles: 'index.html',
-                            reportName: 'Playwright API Test Report'
+            post {
+                always {
+                    junit 'tests-api/test-results/results.xml'
+                    publishHTML target: [
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'tests-api/playwright-report',
+                        reportFiles: 'index.html',
+                        reportName: 'Playwright API Test Report'
                         ]
-                    }
                 }
             }
         }
