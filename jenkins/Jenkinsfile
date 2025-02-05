@@ -20,9 +20,6 @@ pipeline {
             steps {
                 dir('bugtracker-backend') {
                     sh '''
-                        # Clean up any existing files
-                        # rm -f coverage.html coverage.out report.xml
-
                         export GOCACHE="$PWD/.cache"
                         mkdir -p "$GOCACHE"
                         go build -o bugtracker-backend cmd/bugtracker/main.go
@@ -32,17 +29,21 @@ pipeline {
                         # Generate coverage report
                         go test -coverprofile=coverage.out -covermode=atomic ./...
                         go tool cover -html=coverage.out -o coverage.html
+
+                        mkdir -p reports
+                        mv coverage.html reports/
+                        mv report.xml reports/
                     '''
                 }
             }
             post {
                 always {
-                    junit 'bugtracker-backend/report.xml'
+                    junit 'bugtracker-backend/reports/report.xml'
                     publishHTML target: [
                         allowMissing: true,
                         alwaysLinkToLastBuild: true,
                         keepAll: true,
-                        reportDir: 'bugtracker-backend',
+                        reportDir: 'bugtracker-backend/reports',
                         reportFiles: 'coverage.html',
                         reportName: 'Coverage Report'
                     ]
