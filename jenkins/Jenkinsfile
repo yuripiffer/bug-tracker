@@ -11,8 +11,7 @@ pipeline {
                 }
             }
             steps {
-                sh 'docker compose up --build -d tests'
-                sh 'docker compose logs tests -t'
+                sh 'docker compose up --build -d'
             }
         }
 
@@ -86,13 +85,13 @@ pipeline {
                 }
             }
             steps {
-                // Install Go
-                sh 'apt-get update && apt-get install -y golang-go'
+                // // Install Go
+                // sh 'apt-get update && apt-get install -y golang-go'
 
-                // Start the backend server in the background
-                dir('bugtracker-backend') {
-                    sh 'nohup go run cmd/bugtracker/main.go > server.log 2>&1 &'
-                }
+                // // Start the backend server in the background
+                // dir('bugtracker-backend') {
+                //     sh 'nohup go run cmd/bugtracker/main.go > server.log 2>&1 &'
+                // }
 
                 dir('tests-api') {
                     // Wait for the backend health endpoint to be available
