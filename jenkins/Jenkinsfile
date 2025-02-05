@@ -98,7 +98,7 @@ pipeline {
 
                     // Install dependencies and run tests
                     sh 'npm ci'
-                    sh 'npm test:ci'
+                    sh 'npm run test:ci'
                 }
             }
 
