@@ -12,6 +12,7 @@ pipeline {
             }
             steps {
                 sh 'docker compose up --build -d tests'
+                sh 'docker compose logs tests -t'
             }
         }
 
