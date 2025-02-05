@@ -2,12 +2,6 @@ pipeline {
     agent any
 
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('Test Backend') {
             agent {
                 docker {
@@ -82,10 +76,8 @@ pipeline {
                 sh 'apt-get update && apt-get install -y golang-go'
 
                 // Start the backend server in the background
-                dir("${env.WORKSPACE}/bugtracker-backend") {
-                    sh '''
-                    nohup go run cmd/bugtracker/main.go > server.log 2>&1 &
-                    '''
+                dir('bugtracker-backend') {
+                    sh 'nohup go run cmd/bugtracker/main.go > server.log 2>&1 &'
                 }
 
                 dir('tests-api') {
@@ -108,7 +100,7 @@ pipeline {
                         reportDir: 'tests-api/playwright-report',
                         reportFiles: 'index.html',
                         reportName: 'Playwright API Test Report'
-                        ]
+                    ]
                 }
             }
         }
