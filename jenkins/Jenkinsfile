@@ -2,25 +2,7 @@ pipeline {
     agent any
 
     stages {
-        // stage('Build Backend') {
-        //     agent {
-        //         docker {
-        //             image 'golang:1.21-alpine'
-        //             reuseNode true
-        //         }
-        //     }
-        //     steps {
-        //         dir('bugtracker-backend') {
-        //             sh '''
-        //                 export GOCACHE="$PWD/.cache"
-        //                 mkdir -p "$GOCACHE"
-        //                 go build -o bugtracker-backend cmd/bugtracker/main.go
-        //             '''
-        //         }
-        //     }
-        // }
-
-        stage ('Test Backend') {
+        stage('Test Backend') {
             agent {
                 docker {
                     image 'snakee/golang-junit:1.21'
@@ -28,29 +10,34 @@ pipeline {
                     alwaysPull true
                 }
             }
-            
+
             steps {
                 dir('bugtracker-backend') {
                     sh '''
-                        # Clean up any existing files
-                        rm -f coverage.html coverage.out report.xml
+                        export GOCACHE="$PWD/.cache"
+                        mkdir -p "$GOCACHE"
+                        go build -o bugtracker-backend cmd/bugtracker/main.go
 
                         go test -v ./... 2>&1 | go-junit-report -set-exit-code > report.xml
-                                                
+
                         # Generate coverage report
                         go test -coverprofile=coverage.out -covermode=atomic ./...
                         go tool cover -html=coverage.out -o coverage.html
+
+                        mkdir -p reports
+                        mv coverage.html reports/
+                        mv report.xml reports/
                     '''
                 }
             }
             post {
                 always {
-                    junit 'bugtracker-backend/report.xml'
+                    junit 'bugtracker-backend/reports/report.xml'
                     publishHTML target: [
-                        allowMissing: true, 
+                        allowMissing: true,
                         alwaysLinkToLastBuild: true,
                         keepAll: true,
-                        reportDir: 'bugtracker-backend',
+                        reportDir: 'bugtracker-backend/reports',
                         reportFiles: 'coverage.html',
                         reportName: 'Coverage Report'
                     ]
@@ -73,7 +60,47 @@ pipeline {
             post {
                 always {
                     junit 'bugtracker-frontend/test-results.xml'
-                    cleanWs()
+                }
+            }
+        }
+        stage('API tests') {
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.50.0-jammy'
+                    reuseNode true
+                    args '-u 0'  // Runs container as root
+                }
+            }
+            steps {
+                // Install Go
+                sh 'apt-get update && apt-get install -y golang-go'
+
+                // Start the backend server in the background
+                dir('bugtracker-backend') {
+                    sh 'nohup go run cmd/bugtracker/main.go > server.log 2>&1 &'
+                }
+
+                dir('tests-api') {
+                    // Wait for the backend health endpoint to be available
+                    sh 'npx wait-port http://localhost:8080/api/health -t 30000'
+
+                    // Install dependencies and run tests
+                    sh 'npm ci'
+                    sh 'npm run test:ci'
+                }
+            }
+
+            post {
+                always {
+                    junit 'tests-api/test-results/results.xml'
+                    publishHTML target: [
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'tests-api/playwright-report',
+                        reportFiles: 'index.html',
+                        reportName: 'Playwright API Test Report'
+                    ]
                 }
             }
         }

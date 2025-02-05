@@ -85,7 +85,7 @@ jobs:
         working-directory: ./tests-api
         run: |
           npm ci
-          npm test
+          npm run test:ci
 
       # Upload test results
       - name: Upload test results
