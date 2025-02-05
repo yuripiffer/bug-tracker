@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "test:local": "./scripts/run-api-tests.sh --"
+    "test:local": "./scripts/run-api-tests.sh --",
+    "test:ci": "npx playwright test --config playwright.config.ts $@",
+    "test": "echo 'No tests specified'"
   },
   "devDependencies": {
     "@playwright/test": "^1.50.0",
