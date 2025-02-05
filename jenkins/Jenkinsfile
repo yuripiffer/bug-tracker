@@ -23,6 +23,10 @@ pipeline {
                         # Clean up any existing files
                         rm -f coverage.html coverage.out report.xml
 
+                        export GOCACHE="$PWD/.cache"
+                        mkdir -p "$GOCACHE"
+                        go build -o bugtracker-backend cmd/bugtracker/main.go
+
                         go test -v ./... 2>&1 | go-junit-report -set-exit-code > report.xml
 
                         # Generate coverage report
