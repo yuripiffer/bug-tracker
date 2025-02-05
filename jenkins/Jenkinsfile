@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     stages {
-        // stage('Checkout') {
-        //     steps {
-        //         checkout scm
-        //     }
-        // }
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
 
         stage('Test Backend') {
             agent {
@@ -83,11 +83,6 @@ pipeline {
 
                 // Start the backend server in the background
                 dir("${env.WORKSPACE}/bugtracker-backend") {
-                    sh '''
-                        echo "Verifying file structure:"
-                        ls -l cmd/bugtracker/main.go
-                    '''
-
                     sh '''
                     nohup go run cmd/bugtracker/main.go > server.log 2>&1 &
                     '''
