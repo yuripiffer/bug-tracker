@@ -24,7 +24,7 @@ pipeline {
                 }
             }
             environment {
-                PLAYWRIGHT_TEST_BASE_URL = 'http://frontend:3000'
+                PLAYWRIGHT_TEST_BASE_URL = 'http://localhost:3000'
                 API_BASE_URL = 'http://localhost:8080'
                 CI = '1'
             }
