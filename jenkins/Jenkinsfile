@@ -77,5 +77,46 @@ pipeline {
                 }
             }
         }
+        stage('API tests') {
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.50.0-jammy'
+                    reuseNode true
+                }
+            }
+            steps {
+                // Install Go
+                sh 'apt-get update && apt-get install -y golang-go'
+
+                // Start the backend server in the background
+                dir('bugtracker-backend') {
+                    sh '''
+                    nohup go run cmd/bugtracker/main.go > server.log 2>&1 &
+                    '''
+                }
+
+                dir('tests-api') {
+                    // Wait for the backend health endpoint to be available
+                    sh 'npx wait-port http://localhost:8080/api/health -t 30000'
+
+                    // Install dependencies and run tests
+                    sh 'npm ci'
+                    sh 'npm test'
+                }
+            }
+            post {
+                always {
+                    junit 'tests-api/test-results/results.xml'
+                    publishHTML target: [
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'tests-api/playwright-report',
+                        reportFiles: 'index.html',
+                        reportName: 'Playwright API Test Report'
+                    ]
+                }
+            }
+        }
     }
 }
