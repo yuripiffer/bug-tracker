@@ -2,6 +2,18 @@ pipeline {
     agent any
 
     stages {
+        stage('Launch application') {
+            agent  {
+                docker {
+                    image 'docker:27.5.1'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh 'docker-compose up --build --abort-on-container-exit tests'
+            }
+        }
+
         stage('Test Backend') {
             agent {
                 docker {
