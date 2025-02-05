@@ -21,7 +21,7 @@ pipeline {
                 dir('bugtracker-backend') {
                     sh '''
                         # Clean up any existing files
-                        rm -f coverage.html coverage.out report.xml
+                        # rm -f coverage.html coverage.out report.xml
 
                         export GOCACHE="$PWD/.cache"
                         mkdir -p "$GOCACHE"
