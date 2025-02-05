@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "test": "./scripts/run-api-tests.sh --"
+    "test:local": "./scripts/run-api-tests.sh --"
   },
   "devDependencies": {
     "@playwright/test": "^1.50.0",
