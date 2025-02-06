@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     stages {
-        stage('Test Backend') {
+        stage('Unit Tests - Backend') {
             agent {
                 docker {
                     image 'snakee/golang-junit:1.21'
@@ -44,7 +44,8 @@ pipeline {
                 }
             }
         }
-        stage('Build and Test Frontend') {
+
+        stage('Unit Tests - Frontend') {
             agent {
                 docker {
                     image 'node:20-alpine'
@@ -63,23 +64,29 @@ pipeline {
                 }
             }
         }
+
+        stage('Launch application') {
+            agent  {
+                docker {
+                    image 'docker:27.5.1'
+                    reuseNode true
+                    args '-v /var/run/docker.sock:/var/run/docker.sock -u 0'
+                }
+            }
+            steps {
+                sh 'docker compose up --build -d'
+            }
+        }
+
         stage('API tests') {
             agent {
                 docker {
                     image 'mcr.microsoft.com/playwright:v1.50.0-jammy'
                     reuseNode true
-                    args '-u 0'  // Runs container as root
+                    args '-u 0 --network=host'  // Runs container as root, also local network
                 }
             }
             steps {
-                // Install Go
-                sh 'apt-get update && apt-get install -y golang-go'
-
-                // Start the backend server in the background
-                dir('bugtracker-backend') {
-                    sh 'nohup go run cmd/bugtracker/main.go > server.log 2>&1 &'
-                }
-
                 dir('tests-api') {
                     // Wait for the backend health endpoint to be available
                     sh 'npx wait-port http://localhost:8080/api/health -t 30000'
@@ -100,6 +107,40 @@ pipeline {
                         reportDir: 'tests-api/playwright-report',
                         reportFiles: 'index.html',
                         reportName: 'Playwright API Test Report'
+                    ]
+                }
+            }
+        }
+
+        stage('E2E Tests') {
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.50.0-jammy'
+                    reuseNode true
+                    args '--network=host -u 0'
+                }
+            }
+            environment {
+                PLAYWRIGHT_TEST_BASE_URL = 'http://localhost:3000'
+                API_BASE_URL = 'http://localhost:8080'
+                CI = '1'
+            }
+            steps {
+                dir('tests') {
+                    // sh 'npm ci'
+                    sh 'npx playwright test integration.spec.ts'
+                }
+            }
+            post {
+                always {
+                    junit 'tests/test-results/results.xml'
+                    publishHTML target: [
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'tests/playwright-report',
+                        reportFiles: 'index.html',
+                        reportName: 'Playwright Integration Test Report'
                     ]
                 }
             }

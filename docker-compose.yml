@@ -9,7 +9,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8080
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
     depends_on:
       backend:
         condition: service_healthy
@@ -41,21 +41,21 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  tests:
-    build:
-      context: ./tests
-      dockerfile: Dockerfile
-    environment:
-      - PLAYWRIGHT_TEST_BASE_URL=http://frontend:3000
-      - API_BASE_URL=http://backend:8080
-      - CI=1
-    volumes:
-      - ./tests/playwright-report:/tests/playwright-report
-      - ./tests/test-results:/tests/test-results
-    depends_on:
-      frontend:
-        condition: service_healthy
-      backend:
-        condition: service_healthy
-    networks:
-      - bugtracker
+  # tests:
+  #   build:
+  #     context: ./tests
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     - PLAYWRIGHT_TEST_BASE_URL=http://frontend:3000
+  #     - API_BASE_URL=http://backend:8080
+  #     - CI=1
+  #   volumes:
+  #     - ./tests/playwright-report:/tests/playwright-report
+  #     - ./tests/test-results:/tests/test-results
+  #   depends_on:
+  #     frontend:
+  #       condition: service_healthy
+  #     backend:
+  #       condition: service_healthy
+  #   networks:
+  #     - bugtracker
