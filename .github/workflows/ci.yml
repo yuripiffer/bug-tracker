@@ -74,7 +74,7 @@ jobs:
         uses: docker/setup-compose-action@v1
 
       - name: Launch Application
-        run: docker-compose up --build -d
+        run: docker compose up --build -d
 
       - name: Wait for Backend Health
         run: npx wait-port http://localhost:8080/api/health -t 30000
