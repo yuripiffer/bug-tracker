@@ -136,7 +136,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-test-report
+          name: e2e-test-playwright-report
           path: ./tests/playwright-report/
           retention-days: 30
 
@@ -172,61 +172,11 @@ jobs:
           path: ./tests/test-results/*.xml
           reporter: jest-junit
 
-  # integration-tests:
-  #   needs: unit-tests # This ensures integration tests also wait for unit tests
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: read
-  #     checks: write
-  #     pull-requests: write
-
-  #   steps:
-  #     - uses: actions/checkout@v4
-
-  #     # Use GitHub's Docker Compose setup action
-  #     - name: Set up Docker Compose
-  #       uses: docker/setup-compose-action@v1
-
-  #     # - name: Set up Docker Buildx
-  #     #   uses: docker/setup-buildx-action@v3
-
-  #     # Run tests with proper error handling
-  #     - name: Run integration tests
-  #       run: |
-  #         docker-compose up --build --abort-on-container-exit tests || true
-  #         # Capture exit code before docker-compose down
-  #         EXIT_CODE=$(docker-compose ps -q tests | xargs -r docker inspect -f '{{ .State.ExitCode }}')
-  #         # Store exit code since it will be lost after down
-  #         echo $EXIT_CODE > .exit_code
-  #         docker-compose down
-  #         # Read stored exit code
-  #         if [ "$(cat .exit_code)" != "0" ]; then
-  #           exit $(cat .exit_code)
-  #         fi
-
-  #     - name: Upload Playwright report
-  #       if: always()
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: playwright-report
-  #         path: ./tests/playwright-report/
-  #         retention-days: 30
-
-  #     - name: Upload test results
-  #       if: always()
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: test-results
-  #         path: ./tests/test-results/*.xml
-  #         retention-days: 30
-
-  #     - name: Publish test results
-  #       uses: dorny/test-reporter@v1
-  #       if: always()
-  #       with:
-  #         name: Integration Tests
-  #         path: ./tests/test-results/*.xml
-  #         reporter: jest-junit
+      - name: Publish HTML Report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./tests/playwright-report
 
   # perf-tests:
   #   needs: api-tests
