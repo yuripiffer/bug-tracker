@@ -73,18 +73,14 @@ jobs:
 
       - name: Launch Application
         run: |
-          echo "::group::Launching application with Docker Compose"
           docker compose up --build -d
           npx wait-port http://localhost:8080/api/health -t 30000
-          echo "::endgroup::"
       # Run API tests (from tests-api folder)
       - name: Run API Tests
         working-directory: ./tests-api
         run: |
-          echo "::group::Running API tests"
           npm ci
           npm run test:ci
-          echo "::endgroup::"
       # Run Integration (E2E) tests with Playwright from the tests folder.
       # (Here we set environment variables so Playwright uses localhost.)
       - name: Run Integration Tests
@@ -95,6 +91,7 @@ jobs:
           CI: "1"
         run: |
           npm ci
+          npx playwright install 
           npx playwright test integration.spec.ts
 
       # Shut down the application stack
