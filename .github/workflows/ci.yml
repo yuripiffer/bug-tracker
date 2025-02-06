@@ -128,6 +128,15 @@ jobs:
           path: ./tests-api/test-results/*.xml
           reporter: jest-junit
 
+      # Publish test results
+      - name: Publish E2E test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: E2E Tests
+          path: ./tests/test-results/*.xml
+          reporter: jest-junit
+
   # integration-tests:
   #   needs: unit-tests # This ensures integration tests also wait for unit tests
   #   runs-on: ubuntu-latest
