@@ -69,7 +69,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # (Optional) Print Docker version for debugging
       - name: Check Docker versions
         run: |
           docker --version
@@ -79,14 +78,13 @@ jobs:
         run: |
           docker compose up --build -d
           npx wait-port http://localhost:8080/api/health -t 30000
-      # Run API tests (from tests-api folder)
+
       - name: Run API Tests
         working-directory: ./tests-api
         run: |
           npm ci
           npm run test:ci
-      # Run Integration (E2E) tests with Playwright from the tests folder.
-      # (Here we set environment variables so Playwright uses localhost.)
+
       - name: Run Integration Tests
         working-directory: ./tests
         env:
@@ -98,12 +96,10 @@ jobs:
           npx playwright install 
           npx playwright test integration.spec.ts
 
-      # Shut down the application stack
       - name: Shut Down Application
         run: docker compose down
 
-      # Upload test results
-      - name: Upload API test results
+      - name: Upload API Test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -111,16 +107,31 @@ jobs:
           path: ./tests-api/test-results/
           retention-days: 30
 
-      - name: Upload Integration Test Report
+      - name: Upload API Test Playwright Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: integration-report
+          name: api-test-playwright-report
+          path: ./tests-api/playwright-report/
+          retention-days: 30
+
+      - name: Upload E2E test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: ./tests/test-results/
+          retention-days: 30
+
+      - name: Upload E2E Test Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-report
           path: ./tests/playwright-report/
           retention-days: 30
 
-      # Publish test results
-      - name: Publish API test results
+      - name: Publish API Test Results
         uses: dorny/test-reporter@v1
         if: always()
         with:
@@ -128,8 +139,7 @@ jobs:
           path: ./tests-api/test-results/*.xml
           reporter: jest-junit
 
-      # Publish test results
-      - name: Publish E2E test results
+      - name: Publish E2E Test Results
         uses: dorny/test-reporter@v1
         if: always()
         with:
