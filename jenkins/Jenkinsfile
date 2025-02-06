@@ -2,18 +2,20 @@ pipeline {
     agent any
 
     stages {
-        stage('Unit Tests - Backend') {
-            agent {
-                docker {
-                    image 'snakee/golang-junit:1.21'
-                    reuseNode true
-                    alwaysPull true
-                }
-            }
+        stage('Execute Unit Tests') {
+            parallel {
+                stage('Unit Tests - Backend') {
+                    agent {
+                        docker {
+                            image 'snakee/golang-junit:1.21'
+                            reuseNode true
+                            alwaysPull true
+                        }
+                    }
 
-            steps {
-                dir('bugtracker-backend') {
-                    sh '''
+                    steps {
+                        dir('bugtracker-backend') {
+                            sh '''
                         export GOCACHE="$PWD/.cache"
                         mkdir -p "$GOCACHE"
                         go build -o bugtracker-backend cmd/bugtracker/main.go
@@ -28,12 +30,12 @@ pipeline {
                         mv coverage.html reports/
                         mv report.xml reports/
                     '''
-                }
-            }
-            post {
-                always {
-                    junit 'bugtracker-backend/reports/report.xml'
-                    publishHTML target: [
+                        }
+                    }
+                    post {
+                        always {
+                            junit 'bugtracker-backend/reports/report.xml'
+                            publishHTML target: [
                         allowMissing: true,
                         alwaysLinkToLastBuild: true,
                         keepAll: true,
@@ -41,26 +43,28 @@ pipeline {
                         reportFiles: 'coverage.html',
                         reportName: 'Coverage Report'
                     ]
+                        }
+                    }
                 }
-            }
-        }
 
-        stage('Unit Tests - Frontend') {
-            agent {
-                docker {
-                    image 'node:20-alpine'
-                    reuseNode true
-                }
-            }
-            steps {
-                dir('bugtracker-frontend') {
-                    sh 'npm ci'
-                    sh 'npm test -- --reporters=default --reporters=jest-junit'
-                }
-            }
-            post {
-                always {
-                    junit 'bugtracker-frontend/test-results.xml'
+                stage('Unit Tests - Frontend') {
+                    agent {
+                        docker {
+                            image 'node:20-alpine'
+                            reuseNode true
+                        }
+                    }
+                    steps {
+                        dir('bugtracker-frontend') {
+                            sh 'npm ci'
+                            sh 'npm test -- --reporters=default --reporters=jest-junit'
+                        }
+                    }
+                    post {
+                        always {
+                            junit 'bugtracker-frontend/test-results.xml'
+                        }
+                    }
                 }
             }
         }
