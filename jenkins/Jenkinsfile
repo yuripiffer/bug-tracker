@@ -7,7 +7,7 @@ pipeline {
                 docker {
                     image 'docker:27.5.1'
                     reuseNode true
-                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock -u 0'
+                    args '-v /var/run/docker.sock:/var/run/docker.sock -u 0'
                 }
             }
             steps {
@@ -20,7 +20,7 @@ pipeline {
                 docker {
                     image 'mcr.microsoft.com/playwright:v1.50.0-jammy'
                     reuseNode true
-                    args '--network=host'
+                    args '--network=host -u 0'
                 }
             }
             environment {
