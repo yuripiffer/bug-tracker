@@ -107,6 +107,14 @@ jobs:
           path: ./tests-api/test-results/
           retention-days: 30
 
+      - name: Upload Integration Test Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-report
+          path: ./tests/playwright-report/
+          retention-days: 30
+
       # Publish test results
       - name: Publish API test results
         uses: dorny/test-reporter@v1
