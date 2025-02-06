@@ -20,6 +20,7 @@ node_modules/
 # IDE
 .idea/
 .vscode/
+.groovylintrc.json
 
 # OS
 .DS_Store
