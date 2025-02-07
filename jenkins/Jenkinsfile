@@ -159,10 +159,6 @@ pipeline {
                     return env.BRANCH_NAME == 'main' || env.GIT_BRANCH == 'origin/main'
                 }
             }
-            steps {
-                echo "Debug: Current branch is ${env.BRANCH_NAME}"
-                echo "Debug: Git branch is ${env.GIT_BRANCH}"
-            }
             environment {
                 FLY_API_TOKEN = credentials('FLY_API_TOKEN')
                 FLYCTL_INSTALL = '/root/.fly'
@@ -171,6 +167,8 @@ pipeline {
             stages {
                 stage('Install Flyctl') {
                     steps {
+                        echo "Debug: Current branch is ${env.BRANCH_NAME}"
+                        echo "Debug: Git branch is ${env.GIT_BRANCH}"
                         sh 'curl -L https://fly.io/install.sh | sh'
                     }
                 }
