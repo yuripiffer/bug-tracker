@@ -9,6 +9,7 @@ import userEvent from "@testing-library/user-event";
 import { useRouter } from "next/router";
 import BugList from "./BugList";
 import { getBugs, createBug, updateBug, deleteBug } from "../api/bugs";
+import { APP_VERSION } from "../config/app";
 
 // Mock next/router
 jest.mock("next/router", () => ({
@@ -235,5 +236,22 @@ describe("BugList", () => {
       expect(screen.getByText("High")).toHaveClass("bg-red-100");
       expect(screen.getByText("Medium")).toHaveClass("bg-yellow-100");
     });
+  });
+
+  it("displays the correct version number", () => {
+    render(<BugList />);
+
+    // Check if the version is displayed with the 'v' prefix
+    expect(screen.getByText(`v${APP_VERSION}`)).toBeInTheDocument();
+  });
+
+  it("displays the version number in the header", () => {
+    render(<BugList />);
+
+    const header = screen.getByRole("navigation");
+    const versionElement = screen.getByText(`v${APP_VERSION}`);
+
+    // Check if the version number is inside the header
+    expect(header).toContainElement(versionElement);
   });
 });
