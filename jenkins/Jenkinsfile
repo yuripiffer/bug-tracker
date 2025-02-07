@@ -161,7 +161,7 @@ pipeline {
             }
             environment {
                 FLY_API_TOKEN = credentials('FLY_API_TOKEN')
-                FLYCTL_INSTALL = "${WORKSPACE}/.fly"
+                FLYCTL_INSTALL = "${env.WORKSPACE.replaceAll(' ', '')}/.fly"
                 PATH = "$FLYCTL_INSTALL/bin:$PATH"
                 HOME = "${WORKSPACE}"
             }
