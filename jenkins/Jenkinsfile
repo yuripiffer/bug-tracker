@@ -14,9 +14,6 @@ pipeline {
                     }
 
                     steps {
-                        echo "Debug: Current branch is ${env.BRANCH_NAME}"
-                        echo "Debug: Git branch is ${env.GIT_BRANCH}"
-
                         dir('bugtracker-backend') {
                             sh '''
                         export GOCACHE="$PWD/.cache"
