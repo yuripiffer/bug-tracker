@@ -11,8 +11,8 @@ RUN npm install
 # Copy source code
 COPY . .
 
-# Set the API URL at build time
-ENV NEXT_PUBLIC_API_URL=http://localhost:8080
+# Accept a build argument, needed for deploying on Fly.io
+ARG NEXT_PUBLIC_API_URL
 
 # Exclude test reports
 RUN echo "test-results.xml" >> .dockerignore
