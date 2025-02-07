@@ -14,6 +14,9 @@ pipeline {
                     }
 
                     steps {
+                        echo "Debug: Current branch is ${env.BRANCH_NAME}"
+                        echo "Debug: Git branch is ${env.GIT_BRANCH}"
+
                         dir('bugtracker-backend') {
                             sh '''
                         export GOCACHE="$PWD/.cache"
@@ -152,7 +155,13 @@ pipeline {
 
         stage('Deploy') {
             when {
-                branch 'main'
+                expression {
+                    return env.BRANCH_NAME == 'main' || env.GIT_BRANCH == 'origin/main'
+                }
+            }
+            steps {
+                echo "Debug: Current branch is ${env.BRANCH_NAME}"
+                echo "Debug: Git branch is ${env.GIT_BRANCH}"
             }
             environment {
                 FLY_API_TOKEN = credentials('FLY_API_TOKEN')
