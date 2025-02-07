@@ -7,6 +7,7 @@ import EditBugModal from "./EditBugModal";
 import { useRouter } from "next/router";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import Notification from "./Notification";
+import { APP_VERSION } from "../config/app";
 
 export default function BugList() {
   const router = useRouter();
@@ -103,8 +104,9 @@ export default function BugList() {
   return (
     <div className="min-h-screen bg-gray-100">
       <nav className="bg-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-800">Bug Tracker</h1>
+          <span className="text-gray-600">v{APP_VERSION}</span>
         </div>
       </nav>
 
