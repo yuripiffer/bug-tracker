@@ -171,3 +171,20 @@ jobs:
           name: E2E Tests
           path: ./tests/test-results/*.xml
           reporter: jest-junit
+
+  deploy:
+    needs: [api-e2e-perf-tests] # This ensures deployment only happens after tests pass
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/githubDeployFly'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Fly.io CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy Frontend
+        env:
+          FLY_API_TOKEN_FRONTEND: ${{ secrets.FLY_API_TOKEN_FRONTEND }}
+        working-directory: ./bugtracker-frontend
+        run: flyctl deploy --remote-only
