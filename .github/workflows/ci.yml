@@ -174,7 +174,7 @@ jobs:
 
   deploy:
     needs: [api-e2e-perf-tests] # This ensures deployment only happens after tests pass
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/githubDeployFly'
+    # if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
