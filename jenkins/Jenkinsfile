@@ -34,11 +34,7 @@ pipeline {
                     ]
                 }
             }
-<<<<<<< HEAD
-        }
-=======
                 }
->>>>>>> f06fdbb (First attempt at post deployment tests)
 
         stage('Execute Unit Tests') {
             parallel {
@@ -228,3 +224,4 @@ pipeline {
         }
     }
 }
+
