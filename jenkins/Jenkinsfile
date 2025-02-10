@@ -16,13 +16,9 @@ pipeline {
             }
             steps {
                 dir('tests') {
-                    sh """
-                        npm ci
-                        npx playwright install
-                        # Wait for deployment to be ready
-                        npx wait-port ${PLAYWRIGHT_TEST_BASE_URL} -t 60000
+                    sh '''
                         npx playwright test integration.spec.ts
-                    """
+                    '''
                 }
             }
             post {
@@ -226,6 +222,5 @@ pipeline {
                 }
             }
         }
-
     }
 }
