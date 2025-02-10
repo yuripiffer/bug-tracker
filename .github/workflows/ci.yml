@@ -222,7 +222,7 @@ jobs:
           API_BASE_URL: "https://bugtracker-backend.fly.dev"
           CI: "1"
         run: |
-          npx playwright test post-deployment.spec.ts
+          npx playwright test integration.spec.ts
 
       - name: Upload Post Deployment Test Report
         if: always()
