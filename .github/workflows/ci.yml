@@ -85,7 +85,7 @@ jobs:
           npm ci
           npm run test:ci
 
-      - name: Run Integration Tests
+      - name: Run E2E Tests
         working-directory: ./tests
         env:
           PLAYWRIGHT_TEST_BASE_URL: "http://localhost:3000"
@@ -174,7 +174,7 @@ jobs:
 
   deploy:
     needs: [api-e2e-perf-tests] # This ensures deployment only happens after tests pass
-    if: github.ref == 'refs/heads/main'
+    # if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
@@ -231,3 +231,11 @@ jobs:
           name: post-deployment-test-playwright-report
           path: ./tests/playwright-report/
           retention-days: 30
+
+      - name: Publish Post Deployment Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Post Deployment Tests
+          path: ./tests/test-results/*.xml
+          reporter: jest-junit
