@@ -45,20 +45,22 @@ test("Bug creation and deletion flow", async ({ page }) => {
     .innerHTML();
   console.log("Modal content:", modalContent);
 
+  const uniqueTitle = `Test Bug ${Date.now()}`;
+
   // Fill out the form and submit
-  await page.fill('input[name="title"]', "Test Bug");
+  await page.fill('input[name="title"]', uniqueTitle);
   await page.fill('textarea[name="description"]', "This is a test bug");
   await page.selectOption('select[name="priority"]', "Medium");
   await page.click('button:text("Add Bug")');
 
   // Verify that the bug was created
-  await expect(page.locator('a:text("Test Bug")').first()).toBeVisible();
+  await expect(page.locator(`a:text("${uniqueTitle}")`).first()).toBeVisible();
 
   // Click on the bug to view details
-  await page.locator('a:text("Test Bug")').first().click();
+  await page.locator(`a:text("${uniqueTitle}")`).first().click();
 
   // Verify the bug details
-  await expect(page.locator("h1:text('Test Bug')")).toBeVisible();
+  await expect(page.locator(`h1:text('${uniqueTitle}')`)).toBeVisible();
   await expect(page.locator("text=This is a test bug")).toBeVisible();
   await expect(page.locator("text=Medium")).toBeVisible();
 
@@ -67,7 +69,7 @@ test("Bug creation and deletion flow", async ({ page }) => {
   await page.click("text=Confirm");
 
   // Verify the bug was deleted
-  await expect(page.locator('a:text("Test Bug")').first()).toBeHidden();
+  await expect(page.locator(`a:text("${uniqueTitle}")`).first()).toBeHidden();
 });
 
 test("Adding a comment to a bug", async ({ page }) => {
@@ -82,14 +84,16 @@ test("Adding a comment to a bug", async ({ page }) => {
   await page.waitForSelector('[data-testid="add-bug-form"]', {
     timeout: 60000,
   });
-  await page.fill('input[name="title"]', "Bug for Comment");
+
+  const uniqueTitle = `Bug for Comment ${Date.now()}`;
+
+  await page.fill('input[name="title"]', uniqueTitle);
   await page.fill('textarea[name="description"]', "This bug needs a comment");
   await page.selectOption('select[name="priority"]', "Medium");
   await page.click('button:text("Add Bug")');
 
-  // Wait for bug to be created and click on it
-  await expect(page.locator('a:text("Bug for Comment")').first()).toBeVisible();
-  await page.locator('a:text("Bug for Comment")').first().click();
+  await expect(page.locator(`a:text("${uniqueTitle}")`).first()).toBeVisible();
+  await page.locator(`a:text("${uniqueTitle}")`).first().click();
 
   // Wait for comment form
   await page.waitForSelector('[data-testid="comment-form"]', {
@@ -121,13 +125,16 @@ test("Editing a bug", async ({ page }) => {
   await page.waitForSelector('[data-testid="add-bug-form"]', {
     timeout: 60000,
   });
-  await page.fill('input[name="title"]', "Bug to Edit");
+
+  const uniqueTitle = `Bug to Edit ${Date.now()}`;
+
+  await page.fill('input[name="title"]', uniqueTitle);
   await page.fill('textarea[name="description"]', "This bug will be edited");
   await page.selectOption('select[name="priority"]', "Low");
   await page.click('button:text("Add Bug")');
 
   // Navigate to bug details
-  await page.locator('a:text("Bug to Edit")').first().click();
+  await page.locator(`a:text("${uniqueTitle}")`).first().click();
 
   // Click on edit button
   await page.click('button:text("Edit Bug")');
@@ -145,14 +152,15 @@ test("Editing a bug", async ({ page }) => {
     .innerHTML();
   console.log("Edit form content:", formContent);
 
-  // Update bug details
-  await page.fill('input[name="title"]', "Edited Bug Title");
+  // Update bug details with a unique edited title
+  const uniqueEditedTitle = `Edited Bug Title ${Date.now()}`;
+  await page.fill('input[name="title"]', uniqueEditedTitle);
   await page.fill('textarea[name="description"]', "This bug has been edited");
   await page.selectOption('select[name="priority"]', "High");
   await page.click('button:text("Save Changes")');
 
   // Verify updated details
-  await expect(page.locator("h1:text('Edited Bug Title')")).toBeVisible();
-  await expect(page.locator("text=This bug has been edited")).toBeVisible();
-  await expect(page.locator("text=High")).toBeVisible();
+  await expect(page.locator(`h1:text('${uniqueEditedTitle}')`)).toBeVisible();
+  await expect(page.locator(`text=This bug has been edited`)).toBeVisible();
+  await expect(page.locator(`text=High`)).toBeVisible();
 });
