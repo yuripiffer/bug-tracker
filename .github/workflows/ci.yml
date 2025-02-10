@@ -174,7 +174,7 @@ jobs:
 
   deploy:
     needs: [api-e2e-perf-tests] # This ensures deployment only happens after tests pass
-    # if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
@@ -197,7 +197,7 @@ jobs:
 
   post-deployment-tests:
     needs: deploy
-    # if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -224,7 +224,6 @@ jobs:
         working-directory: ./tests
         env:
           PLAYWRIGHT_TEST_BASE_URL: "https://bugtracker-frontend-jameswillett.fly.dev"
-          # API_BASE_URL: "https://bugtracker-backend.fly.dev"
           CI: "1"
         run: |
           npx playwright test integration.spec.ts
