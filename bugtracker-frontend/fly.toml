@@ -7,7 +7,7 @@ app = 'bugtracker-frontend-jameswillett'
 primary_region = 'lhr'
 
 [build.args]
-  NEXT_PUBLIC_API_URL = "https://bugtracker-backend.fly.dev"
+  NEXT_PUBLIC_API_URL = "https://bugtracker-backend-jameswillett.fly.dev"
   
 [http_service]
   internal_port = 3000
