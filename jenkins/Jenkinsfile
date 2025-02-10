@@ -2,40 +2,6 @@ pipeline {
     agent any
 
     stages {
-        stage('Post-Deployment Tests') {
-            agent {
-                docker {
-                    image 'mcr.microsoft.com/playwright:v1.50.0-jammy'
-                    args '-u root'
-                }
-            }
-            environment {
-                PLAYWRIGHT_TEST_BASE_URL = 'https://bugtracker-frontend-jameswillett.fly.dev'
-                API_BASE_URL = 'https://bugtracker-backend.fly.dev'
-                CI = '1'
-            }
-            steps {
-                dir('tests') {
-                    sh '''
-                        npx playwright test integration.spec.ts
-                    '''
-                }
-            }
-            post {
-                always {
-                    junit 'tests/test-results/results.xml'
-                    publishHTML target: [
-                        allowMissing: true,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: 'tests/playwright-report',
-                        reportFiles: 'index.html',
-                        reportName: 'Post-Deployment Test Report'
-                    ]
-                }
-            }
-                }
-
         stage('Execute Unit Tests') {
             parallel {
                 stage('Unit Tests - Backend') {
@@ -219,6 +185,40 @@ pipeline {
                             sh 'flyctl deploy --remote-only'
                         }
                     }
+                }
+            }
+        }
+
+        stage('Post-Deployment Tests') {
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.50.0-jammy'
+                    args '-u root'
+                }
+            }
+            environment {
+                PLAYWRIGHT_TEST_BASE_URL = 'https://bugtracker-frontend-jameswillett.fly.dev'
+                API_BASE_URL = 'https://bugtracker-backend.fly.dev'
+                CI = '1'
+            }
+            steps {
+                dir('tests') {
+                    sh '''
+                        npx playwright test integration.spec.ts
+                    '''
+                }
+            }
+            post {
+                always {
+                    junit 'tests/test-results/results.xml'
+                    publishHTML target: [
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'tests/playwright-report',
+                        reportFiles: 'index.html',
+                        reportName: 'Post-Deployment Test Report'
+                    ]
                 }
             }
         }
