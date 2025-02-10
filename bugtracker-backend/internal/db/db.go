@@ -261,3 +261,35 @@ func CleanupTestDB() error {
 
 	return err
 }
+
+// Add this new function
+func DeleteAllBugs() (int, error) {
+	var count int
+	err := db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket(bugsBucket)
+		if b == nil {
+			count = 0
+			return nil
+		}
+		// Count number of bugs before deletion
+		count = b.Stats().KeyN
+
+		// Delete the bugs bucket and recreate it
+		if err := tx.DeleteBucket(bugsBucket); err != nil {
+			return fmt.Errorf("delete bugs bucket: %w", err)
+		}
+		
+		if _, err := tx.CreateBucket(bugsBucket); err != nil {
+			return fmt.Errorf("create bugs bucket: %w", err)
+		}
+
+		// Reset the bug ID counter
+		c := tx.Bucket(counterBucket)
+		if err := c.Put([]byte("lastBugID"), itob(0)); err != nil {
+			return fmt.Errorf("reset bug counter: %w", err)
+		}
+
+		return nil
+	})
+	return count, err
+}
