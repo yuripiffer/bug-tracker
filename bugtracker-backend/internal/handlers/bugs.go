@@ -16,6 +16,7 @@ import (
 func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/bugs", CreateBug).Methods("POST")
 	r.HandleFunc("/bugs", GetBugs).Methods("GET")
+	r.HandleFunc("/bugs", DeleteAllBugs).Methods("DELETE")
 	r.HandleFunc("/bugs/{id}", GetBug).Methods("GET")
 	r.HandleFunc("/bugs/{id}", UpdateBug).Methods("PUT")
 	r.HandleFunc("/bugs/{id}", DeleteBug).Methods("DELETE")
@@ -198,4 +199,23 @@ func DeleteBug(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func DeleteAllBugs(w http.ResponseWriter, r *http.Request) {
+	log.Printf("DeleteAllBugs called from %s", r.RemoteAddr)
+	
+	count, err := db.DeleteAllBugs()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]int{
+		"deleted": count,
+	})
 }
