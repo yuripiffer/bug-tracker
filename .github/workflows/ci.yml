@@ -172,8 +172,8 @@ jobs:
           path: ./tests/test-results/*.xml
           reporter: jest-junit
 
-  deploy:
-    needs: [api-e2e-perf-tests] # This ensures deployment only happens after tests pass
+  deploy-staging:
+    needs: [api-e2e-perf-tests]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
@@ -187,16 +187,16 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         working-directory: ./bugtracker-backend
-        run: flyctl deploy --remote-only
+        run: flyctl deploy -c fly.staging.toml --remote-only
 
       - name: Deploy Frontend
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         working-directory: ./bugtracker-frontend
-        run: flyctl deploy --remote-only
+        run: flyctl deploy -c fly.staging.toml --remote-only
 
   post-deployment-tests:
-    needs: deploy
+    needs: deploy-staging
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
@@ -223,7 +223,7 @@ jobs:
       - name: Run Post Deployment Tests
         working-directory: ./tests
         env:
-          PLAYWRIGHT_TEST_BASE_URL: "https://bugtracker-frontend-jameswillett.fly.dev"
+          PLAYWRIGHT_TEST_BASE_URL: "https://bugtracker-frontend-staging-jameswillett.fly.dev"
           CI: "1"
         run: |
           npx playwright test integration.spec.ts
@@ -243,3 +243,26 @@ jobs:
           name: Post Deployment Tests
           path: ./tests/test-results/*.xml
           reporter: jest-junit
+
+  deploy-production:
+    needs: [post-deployment-tests]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Fly.io CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy Backend
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        working-directory: ./bugtracker-backend
+        run: flyctl deploy --remote-only
+
+      - name: Deploy Frontend
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        working-directory: ./bugtracker-frontend
+        run: flyctl deploy --remote-only
