@@ -42,7 +42,7 @@ pipeline {
                         reportDir: 'bugtracker-backend/reports',
                         reportFiles: 'coverage.html',
                         reportName: 'Coverage Report'
-                    ]
+                        ]
                         }
                     }
                 }
@@ -92,10 +92,8 @@ pipeline {
             }
             steps {
                 dir('tests-api') {
-                    // Wait for the backend health endpoint to be available
                     sh 'npx wait-port http://localhost:8080/api/health -t 30000'
 
-                    // Install dependencies and run tests
                     sh 'npm ci'
                     sh 'npm run test:ci'
                 }
@@ -150,7 +148,83 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy Staging') {
+            when {
+                expression {
+                    return env.GIT_BRANCH == 'origin/main'
+                }
+            }
+            environment {
+                FLY_API_TOKEN = credentials('FLY_API_TOKEN')
+                FLYCTL_INSTALL = "${env.WORKSPACE.replaceAll(' ', '')}/.fly"
+                PATH = "$FLYCTL_INSTALL/bin:$PATH"
+                HOME = "${WORKSPACE}"
+            }
+            stages {
+                stage('Install Flyctl') {
+                    steps {
+                        sh 'mkdir -p $FLYCTL_INSTALL'
+                        sh 'curl -L https://fly.io/install.sh | sh'
+                        sh 'flyctl version'
+                    }
+                }
+
+                stage('Deploy Backend') {
+                    steps {
+                        dir('bugtracker-backend') {
+                            sh 'flyctl deploy -c fly.staging.toml --remote-only'
+                        }
+                    }
+                }
+
+                stage('Deploy Frontend') {
+                    steps {
+                        dir('bugtracker-frontend') {
+                            sh 'flyctl deploy -c fly.staging.toml --remote-only'
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Post-Deployment Tests') {
+            when {
+                expression {
+                    return env.GIT_BRANCH == 'origin/main'
+                }
+            }
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.50.0-jammy'
+                    args '-u root'
+                }
+            }
+            environment {
+                PLAYWRIGHT_TEST_BASE_URL = 'https://bugtracker-frontend-staging-jameswillett.fly.dev'
+                CI = '1'
+            }
+            steps {
+                dir('tests') {
+                    sh '''
+                        npx playwright test integration.spec.ts
+                    '''
+                }
+            }
+            post {
+                always {
+                    junit 'tests/test-results/results.xml'
+                    publishHTML target: [
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'tests/playwright-report',
+                        reportFiles: 'index.html',
+                        reportName: 'Post-Deployment Test Report'
+                    ]
+                }
+            }
+        }
+        stage('Deploy Production') {
             when {
                 expression {
                     return env.GIT_BRANCH == 'origin/main'
@@ -185,39 +259,6 @@ pipeline {
                             sh 'flyctl deploy --remote-only'
                         }
                     }
-                }
-            }
-        }
-
-        stage('Post-Deployment Tests') {
-            agent {
-                docker {
-                    image 'mcr.microsoft.com/playwright:v1.50.0-jammy'
-                    args '-u root'
-                }
-            }
-            environment {
-                PLAYWRIGHT_TEST_BASE_URL = 'https://bugtracker-frontend-jameswillett.fly.dev'
-                CI = '1'
-            }
-            steps {
-                dir('tests') {
-                    sh '''
-                        npx playwright test integration.spec.ts
-                    '''
-                }
-            }
-            post {
-                always {
-                    junit 'tests/test-results/results.xml'
-                    publishHTML target: [
-                        allowMissing: true,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: 'tests/playwright-report',
-                        reportFiles: 'index.html',
-                        reportName: 'Post-Deployment Test Report'
-                    ]
                 }
             }
         }
