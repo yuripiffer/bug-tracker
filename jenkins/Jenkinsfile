@@ -1,12 +1,13 @@
 pipeline {
     agent any
 
-    options {
-        // Clean workspace before each build
-        cleanWs()
-    }
-
     stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
         stage('Execute Unit Tests') {
             parallel {
                 stage('Unit Tests - Backend') {
