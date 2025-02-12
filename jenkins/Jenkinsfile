@@ -141,7 +141,7 @@ pipeline {
             }
             steps {
                 dir('tests') {
-                    // sh 'npm ci'
+                    sh 'npm ci'
                     sh 'npx playwright test integration.spec.ts'
                 }
             }
@@ -155,6 +155,47 @@ pipeline {
                         reportDir: 'tests/playwright-report',
                         reportFiles: 'index.html',
                         reportName: 'Playwright Integration Test Report'
+                    ]
+                }
+            }
+        }
+
+        stage('Performance Tests') {
+            agent {
+                docker {
+                    image 'grafana/k6:latest'
+                    reuseNode true
+                    args '--network=host -u root ' +
+                         '--entrypoint=""'  // Need to overwrite entrypoint in this container
+                }
+            }
+            steps {
+                dir('tests-perf') {
+                    script {
+                        def result = sh(
+                            script: '''
+                                k6 run --out json=summary.json --out web-dashboard=perf-results.html script.js
+                            ''',
+                            returnStatus: true
+                        )
+
+                        archiveArtifacts artifacts: 'summary.json,perf-results.html', fingerprint: true
+
+                        if (result != 0) {
+                            error 'Performance test failed'
+                        }
+                    }
+                }
+            }
+            post {
+                always {
+                    publishHTML target: [
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'tests-perf',
+                        reportFiles: 'perf-results.html',
+                        reportName: 'K6 Performance Test Report'
                     ]
                 }
             }
@@ -273,6 +314,12 @@ pipeline {
                     }
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
         }
     }
 }
