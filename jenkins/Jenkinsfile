@@ -56,13 +56,25 @@ pipeline {
                     }
                     steps {
                         dir('bugtracker-frontend') {
-                            sh 'npm ci'
-                            sh 'npm test -- --reporters=default --reporters=jest-junit'
+                            sh '''
+                                npm ci
+                                npm test
+                                mkdir -p reports
+                                mv coverage reports/
+                            '''
                         }
                     }
                     post {
                         always {
                             junit 'bugtracker-frontend/test-results.xml'
+                            publishHTML target: [
+                                allowMissing: true,
+                                alwaysLinkToLastBuild: true,
+                                keepAll: true,
+                                reportDir: 'bugtracker-frontend/reports/coverage',
+                                reportFiles: 'index.html',
+                                reportName: 'Frontend Coverage Report'
+                            ]
                         }
                     }
                 }
