@@ -166,7 +166,7 @@ pipeline {
                     image 'grafana/k6:latest'
                     reuseNode true
                     args '--network=host -u root ' +
-                         '--entrypoint=""'  // Need to overwrite entrypoint
+                         '--entrypoint=""'  // Need to overwrite entrypoint in this container
                 }
             }
             steps {
