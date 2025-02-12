@@ -141,7 +141,7 @@ pipeline {
             }
             steps {
                 dir('tests') {
-                    // sh 'npm ci'
+                    sh 'npm ci'
                     sh 'npx playwright test integration.spec.ts'
                 }
             }
