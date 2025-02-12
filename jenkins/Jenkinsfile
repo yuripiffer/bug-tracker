@@ -165,7 +165,8 @@ pipeline {
                 docker {
                     image 'grafana/k6:latest'
                     reuseNode true
-                    args '--network=host -u root --entrypoint=""'  // Run as root and override entrypoint
+                    args '--network=host -u root ' +
+                         '--entrypoint=""'  // Need to overwrite entrypoint
                 }
             }
             steps {
@@ -173,7 +174,7 @@ pipeline {
                     script {
                         def result = sh(
                             script: '''
-                                k6 run --out json=summary.json --out html=perf-results.html script.js
+                                k6 run --out json=summary.json --out web-dashboard=perf-results.html script.js
                             ''',
                             returnStatus: true
                         )
