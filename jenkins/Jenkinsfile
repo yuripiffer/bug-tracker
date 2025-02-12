@@ -160,6 +160,53 @@ pipeline {
             }
         }
 
+        stage('Performance Tests') {
+            agent {
+                docker {
+                    image 'grafana/k6:latest'
+                    reuseNode true
+                    args '--network=host'  // To access the running application
+                }
+            }
+            steps {
+                dir('tests-perf') {
+                    script {
+                        def result = sh(
+                            script: 'k6 run --out json=summary.json script.js',
+                            returnStatus: true
+                        )
+
+                        // Archive the results
+                        archiveArtifacts artifacts: 'summary.json', fingerprint: true
+
+                        // Optional: Fail the build if performance thresholds aren't met
+                        if (result != 0) {
+                            error 'Performance test failed'
+                        }
+                    }
+                }
+            }
+            post {
+                always {
+                    perfReport sourceDataFiles: 'tests-perf/summary.json',
+                              errorUnstableThreshold: 0,
+                              errorFailedThreshold: 0,
+                              errorUnstableResponseTimeThreshold: '',
+                              relativeFailedThresholdPositive: 0,
+                              relativeFailedThresholdNegative: 0,
+                              relativeUnstableThresholdPositive: 0,
+                              relativeUnstableThresholdNegative: 0,
+                              modePerformancePerTestCase: true,
+                              modeThroughput: true,
+                              nthBuildNumber: 0,
+                              configType: 'PRT',
+                              modeOfThreshold: false,
+                              failBuildIfNoResultFile: false,
+                              compareBuildPrevious: true
+                }
+            }
+        }
+
         stage('Deploy Staging') {
             when {
                 expression {
