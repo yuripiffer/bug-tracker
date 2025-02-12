@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  unit-tests:
+  unit-tests-backend:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -16,7 +16,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Backend unit tests
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
@@ -37,7 +36,16 @@ jobs:
           test-results: bugtracker-backend/test-results.json
           package-name: bugtracker-backend
 
-      # Frontend unit tests
+  unit-tests-frontend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -58,7 +66,7 @@ jobs:
           reporter: jest-junit
 
   api-e2e-perf-tests:
-    needs: unit-tests
+    needs: [unit-tests-backend, unit-tests-frontend]
     runs-on: ubuntu-latest
     permissions:
       contents: write
