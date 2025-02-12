@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    options {
+        // Clean workspace before each build
+        cleanWs()
+    }
+
     stages {
         stage('Execute Unit Tests') {
             parallel {
@@ -172,14 +177,15 @@ pipeline {
                 dir('tests-perf') {
                     script {
                         def result = sh(
-                            script: 'k6 run --out json=summary.json script.js',
+                            script: '''
+                                k6 run --out json=summary.json --out html=perf-results.html script.js
+                            ''',
                             returnStatus: true
                         )
 
-                        // Archive the results
-                        archiveArtifacts artifacts: 'summary.json', fingerprint: true
+                        // Archive both JSON and HTML results
+                        archiveArtifacts artifacts: 'summary.json,perf-results.html', fingerprint: true
 
-                        // Optional: Fail the build if performance thresholds aren't met
                         if (result != 0) {
                             error 'Performance test failed'
                         }
@@ -188,21 +194,14 @@ pipeline {
             }
             post {
                 always {
-                    perfReport sourceDataFiles: 'tests-perf/summary.json',
-                              errorUnstableThreshold: 0,
-                              errorFailedThreshold: 0,
-                              errorUnstableResponseTimeThreshold: '',
-                              relativeFailedThresholdPositive: 0,
-                              relativeFailedThresholdNegative: 0,
-                              relativeUnstableThresholdPositive: 0,
-                              relativeUnstableThresholdNegative: 0,
-                              modePerformancePerTestCase: true,
-                              modeThroughput: true,
-                              nthBuildNumber: 0,
-                              configType: 'PRT',
-                              modeOfThreshold: false,
-                              failBuildIfNoResultFile: false,
-                              compareBuildPrevious: true
+                    publishHTML target: [
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'tests-perf',
+                        reportFiles: 'perf-results.html',
+                        reportName: 'K6 Performance Test Report'
+                    ]
                 }
             }
         }
