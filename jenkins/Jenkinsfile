@@ -165,7 +165,7 @@ pipeline {
                 docker {
                     image 'grafana/k6:latest'
                     reuseNode true
-                    args '--network=host -u 0'  // Run as root to access host network
+                    args '--network=host -u root'  // Run as root to access host network, like Playwright
                 }
             }
             steps {
