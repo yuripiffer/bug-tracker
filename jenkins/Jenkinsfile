@@ -2,13 +2,6 @@ pipeline {
     agent any
 
     stages {
-        stage('Clean Workspace') {
-            steps {
-                cleanWs()
-                checkout scm
-            }
-        }
-
         stage('Execute Unit Tests') {
             parallel {
                 stage('Unit Tests - Backend') {
@@ -321,6 +314,12 @@ pipeline {
                     }
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
         }
     }
 }
