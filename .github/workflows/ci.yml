@@ -23,11 +23,15 @@ jobs:
           cache: true
           cache-dependency-path: bugtracker-backend/go.sum
 
+      - name: Install go-junit-report
+        run: go install github.com/jstemmer/go-junit-report/v2@latest
+
       - name: Test backend
         working-directory: ./bugtracker-backend
         run: |
           go test -json -coverprofile=coverage.out -covermode=atomic ./... > test-results.json
           go tool cover -func=coverage.out > coverage.txt
+          go test -v ./... 2>&1 | go-junit-report > test-results.xml
 
       - name: Generate backend test report
         uses: guyarb/golang-test-annotations@v0.7.0
@@ -35,6 +39,14 @@ jobs:
         with:
           test-results: bugtracker-backend/test-results.json
           package-name: bugtracker-backend
+
+      - name: Publish backend test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Backend Unit Tests
+          path: bugtracker-backend/test-results.xml
+          reporter: jest-junit
 
   unit-tests-frontend:
     runs-on: ubuntu-latest
@@ -61,7 +73,7 @@ jobs:
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Frontend Tests
+          name: Frontend Unit Tests
           path: bugtracker-frontend/test-results.xml
           reporter: jest-junit
 
