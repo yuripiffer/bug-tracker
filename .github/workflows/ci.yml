@@ -85,13 +85,21 @@ jobs:
       - name: Test frontend
         id: test-frontend
         working-directory: ./bugtracker-frontend
-        run: npm ci && npm test
+        run: |
+          npm ci
+          # Run tests and save full output for GitHub Actions UI
+          npm test | tee full_output.txt
 
-      - name: Report Coverage
-        uses: davelosert/vitest-coverage-report-action@v2
-        with:
-          json-summary-path: ./bugtracker-frontend/coverage/coverage-summary.json
-          name: Frontend Coverage
+          # Extract just the coverage summary for PR comment
+          echo "report<<EOF" >> $GITHUB_OUTPUT
+          sed -n '/^=* Coverage summary/,/^Ran all test suites/p' full_output.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # Add to GitHub Actions UI
+          echo "## Frontend Test Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat full_output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Publish frontend test results
         uses: dorny/test-reporter@v1
