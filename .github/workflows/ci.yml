@@ -87,17 +87,18 @@ jobs:
         working-directory: ./bugtracker-frontend
         run: |
           npm ci
-          # Run tests and capture coverage output
-          npm test > test_output.txt 2>&1
+          # Run tests and save full output for GitHub Actions UI
+          npm test | tee full_output.txt
 
+          # Extract just the coverage summary for PR comment
           echo "report<<EOF" >> $GITHUB_OUTPUT
-          cat test_output.txt >> $GITHUB_OUTPUT
+          sed -n '/^=* Coverage summary/,/^Ran all test suites/p' full_output.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
           # Add to GitHub Actions UI
           echo "## Frontend Test Coverage Report" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          cat test_output.txt >> $GITHUB_STEP_SUMMARY
+          cat full_output.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Publish frontend test results
