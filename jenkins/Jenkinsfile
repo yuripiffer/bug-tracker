@@ -165,7 +165,7 @@ pipeline {
                 docker {
                     image 'grafana/k6:latest'
                     reuseNode true
-                    args '--network=host -u root'  // Run as root to access host network, like Playwright
+                    args '--network=host -u root --entrypoint=""'  // Run as root and override entrypoint
                 }
             }
             steps {
@@ -178,7 +178,6 @@ pipeline {
                             returnStatus: true
                         )
 
-                        // Archive both JSON and HTML results
                         archiveArtifacts artifacts: 'summary.json,perf-results.html', fingerprint: true
 
                         if (result != 0) {
