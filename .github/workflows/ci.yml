@@ -44,7 +44,7 @@ jobs:
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Backend Unit Tests
+          name: Backend Unit Tests Report
           path: bugtracker-backend/test-results.xml
           reporter: jest-junit
 
@@ -73,7 +73,7 @@ jobs:
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Frontend Unit Tests
+          name: Frontend Unit Tests Report
           path: bugtracker-frontend/test-results.xml
           reporter: jest-junit
 
@@ -180,7 +180,7 @@ jobs:
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: API Tests
+          name: API Tests Report
           path: ./tests-api/test-results/*.xml
           reporter: jest-junit
 
@@ -188,7 +188,7 @@ jobs:
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: E2E Tests
+          name: E2E Tests Report
           path: ./tests/test-results/*.xml
           reporter: jest-junit
 
@@ -260,7 +260,7 @@ jobs:
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Post Deployment Tests
+          name: Post Deployment Tests Report
           path: ./tests/test-results/*.xml
           reporter: jest-junit
 
