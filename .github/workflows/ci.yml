@@ -90,13 +90,13 @@ jobs:
 
           # Save coverage report for PR comment
           echo "report<<EOF" >> $GITHUB_OUTPUT
-          cat coverage/coverage-summary.txt >> $GITHUB_OUTPUT
+          cat coverage/text-summary.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
           # Add coverage report to GitHub Actions UI
           echo "## Frontend Test Coverage Report" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          cat coverage/coverage-summary.txt >> $GITHUB_STEP_SUMMARY
+          cat coverage/text-summary.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Publish frontend test results
