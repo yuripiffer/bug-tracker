@@ -1,4 +1,4 @@
-# Bug Tracker Application
+# Bug Tracker Pro
 
 <p align="center">
   <img src="bugTracker_Logo.png" alt="Bug Tracker Logo" width="200" height="200"/>

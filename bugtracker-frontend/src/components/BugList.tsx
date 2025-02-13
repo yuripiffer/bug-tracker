@@ -115,7 +115,9 @@ export default function BugList() {
               className="mr-3"
               priority
             />
-            <h1 className="text-2xl font-bold text-gray-800">Bug Tracker</h1>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Bug Tracker Pro
+            </h1>
           </div>
           <span className="text-gray-600">v{APP_VERSION}</span>
         </div>
