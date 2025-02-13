@@ -8,6 +8,7 @@ import { useRouter } from "next/router";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import Notification from "./Notification";
 import { APP_VERSION } from "../config/app";
+import Image from "next/image";
 
 export default function BugList() {
   const router = useRouter();
@@ -105,7 +106,17 @@ export default function BugList() {
     <div className="min-h-screen bg-gray-100">
       <nav className="bg-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">Bug Tracker</h1>
+          <div className="flex items-center">
+            <Image
+              src="/bugTracker_Logo.png"
+              alt="Bug Tracker Logo"
+              width={40}
+              height={40}
+              className="mr-3"
+              priority
+            />
+            <h1 className="text-2xl font-bold text-gray-800">Bug Tracker</h1>
+          </div>
           <span className="text-gray-600">v{APP_VERSION}</span>
         </div>
       </nav>
