@@ -1,7 +1,7 @@
 # Bug Tracker Pro
 
 <p align="center">
-  <img src="bugtracker-frontend/public/bugTracker_Logo.png" alt="Bug Tracker Logo" width="200" height="200"/>
+  <img src="bugtracker-frontend/public/bugTracker_Logo.png" alt="Bug Tracker Logo" width="400" height="400"/>
 </p>
 
 A full-stack bug tracking application built with Go (backend) and Next.js (frontend). The application allows users to create, read, update, and delete bug reports, with support for comments and priority levels.
