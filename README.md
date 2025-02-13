@@ -125,6 +125,19 @@ k6 run script.js
 - `tests-perf/` - Performance tests using K6
 - `jenkins/` - Contains Jenkins pipeline configurations
 
+## Jenkins CI/CD
+
+The project includes Jenkins pipelines located in the `jenkins/` folder for continuous integration and deployment.
+
+To start Jenkins locally using Docker Compose:
+
+```bash
+cd jenkins
+docker-compose up --build
+```
+
+Jenkins will then be available at [http://localhost:9000](http://localhost:9000).
+
 ## Contributing
 
 1. Fork the repository
