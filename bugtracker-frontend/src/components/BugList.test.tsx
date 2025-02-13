@@ -31,6 +31,20 @@ jest.mock("next/link", () => ({
   }) => <a href={href}>{children}</a>,
 }));
 
+// Mock next/image
+jest.mock("next/image", () => ({
+  __esModule: true,
+  default: ({
+    src,
+    alt,
+    className,
+  }: {
+    src: string;
+    alt: string;
+    className?: string;
+  }) => <img src={src} alt={alt} className={className} />,
+}));
+
 describe("BugList", () => {
   const mockRouter = {
     query: {},
