@@ -253,7 +253,7 @@ pipeline {
                 }
             }
             environment {
-                PLAYWRIGHT_TEST_BASE_URL = 'https://bugtracker-frontend-staging-jameswillett.fly.dev'
+                PLAYWRIGHT_TEST_BASE_URL = 'https://bugtracker-staging-jameswillett.fly.dev'
                 CI = '1'
             }
             steps {
