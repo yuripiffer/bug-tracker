@@ -177,7 +177,6 @@ func TestUpdateBug(t *testing.T) {
 		db.Cleanup()
 	}()
 
-	// Create a test bug first
 	bug := &models.Bug{
 		Title:       "Original Title",
 		Description: "Original Description",
@@ -280,7 +279,6 @@ func TestDeleteBug(t *testing.T) {
 		db.Cleanup()
 	}()
 
-	// Create a test bug first
 	bug := &models.Bug{
 		Title:       "Test Bug",
 		Description: "Test Description",
@@ -331,7 +329,6 @@ func TestDeleteBug(t *testing.T) {
 				assert.Contains(t, resp["error"], tt.expectedError)
 			}
 
-			// Verify bug is actually deleted
 			if tt.expectedStatus == http.StatusNoContent {
 				idInt, _ := strconv.Atoi(tt.bugID)
 				_, err := db.GetBug(idInt)

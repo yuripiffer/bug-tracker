@@ -19,7 +19,7 @@ var (
 	bugsBucket     = []byte("bugs")
 	commentsBucket = []byte("comments")
 	counterBucket  = []byte("counter")
-	databasePath   = getDBPath() // Use function to get path
+	databasePath   = getDBPath()
 )
 
 func getDBPath() string {
@@ -29,7 +29,6 @@ func getDBPath() string {
 	return "bugs.db"
 }
 
-// Init initializes the BoltDB database
 func Init() error {
 	if initialized {
 		return fmt.Errorf("database already initialized")
@@ -41,21 +40,17 @@ func Init() error {
 		return fmt.Errorf("failed to open database: %w", err)
 	}
 
-	// Create buckets if they don't exist
 	err = db.Update(func(tx *bbolt.Tx) error {
-		// Create bugs bucket
 		_, err := tx.CreateBucketIfNotExists(bugsBucket)
 		if err != nil {
 			return fmt.Errorf("create bugs bucket: %w", err)
 		}
 
-		// Create comments bucket
 		_, err = tx.CreateBucketIfNotExists(commentsBucket)
 		if err != nil {
 			return fmt.Errorf("create comments bucket: %w", err)
 		}
 
-		// Create and initialize counter bucket
 		b, err := tx.CreateBucketIfNotExists(counterBucket)
 		if err != nil {
 			return fmt.Errorf("create counter bucket: %w", err)
@@ -77,7 +72,6 @@ func Init() error {
 	return nil
 }
 
-// CreateBug inserts a new bug into the database
 func CreateBug(bug *models.Bug) error {
 	if db == nil {
 		return fmt.Errorf("database not initialized")
@@ -85,7 +79,6 @@ func CreateBug(bug *models.Bug) error {
 	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(bugsBucket)
 
-		// Get next ID
 		nextID, err := getNextID(tx)
 		if err != nil {
 			return err
@@ -93,18 +86,15 @@ func CreateBug(bug *models.Bug) error {
 
 		bug.ID = nextID
 
-		// Serialize the bug to JSON
 		encoded, err := json.Marshal(bug)
 		if err != nil {
 			return fmt.Errorf("failed to marshal bug: %w", err)
 		}
 
-		// Insert the bug with its ID as the key
 		return b.Put(itob(bug.ID), encoded)
 	})
 }
 
-// GetBug retrieves a bug by its ID
 func GetBug(id int) (*models.Bug, error) {
 	var bug models.Bug
 
@@ -125,7 +115,6 @@ func GetBug(id int) (*models.Bug, error) {
 	return &bug, nil
 }
 
-// GetAllBugs retrieves all bugs from the database
 func GetAllBugs() ([]*models.Bug, error) {
 	var bugs []*models.Bug
 
@@ -149,7 +138,6 @@ func GetAllBugs() ([]*models.Bug, error) {
 	return bugs, nil
 }
 
-// DeleteBug removes a bug from the database by its ID
 func DeleteBug(id int) error {
 	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(bugsBucket)
@@ -157,7 +145,6 @@ func DeleteBug(id int) error {
 			return fmt.Errorf("bucket not found")
 		}
 
-		// Check if bug exists first
 		if b.Get(itob(id)) == nil {
 			return fmt.Errorf("bug not found")
 		}
@@ -166,7 +153,6 @@ func DeleteBug(id int) error {
 	})
 }
 
-// Cleanup closes the database
 func Cleanup() {
 	if db != nil {
 		db.Close()
@@ -175,7 +161,6 @@ func Cleanup() {
 	initialized = false
 }
 
-// Add this function to get the next ID
 func getNextID(tx *bbolt.Tx) (int, error) {
 	b := tx.Bucket(counterBucket)
 	id := b.Get([]byte("lastBugID"))
@@ -194,7 +179,6 @@ func getNextID(tx *bbolt.Tx) (int, error) {
 	return nextID, nil
 }
 
-// Helper functions for converting between int and []byte
 func itob(v int) []byte {
 	b := make([]byte, 8)
 	binary.BigEndian.PutUint64(b, uint64(v))
@@ -209,22 +193,18 @@ func UpdateBug(bug *models.Bug) error {
 	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(bugsBucket)
 
-		// Check if bug exists
 		existing := b.Get(itob(bug.ID))
 		if existing == nil {
 			return fmt.Errorf("bug not found")
 		}
 
-		// Update the timestamps
 		bug.UpdatedAt = time.Now()
 
-		// Serialize the bug to JSON
 		encoded, err := json.Marshal(bug)
 		if err != nil {
 			return fmt.Errorf("failed to marshal bug: %w", err)
 		}
 
-		// Update the bug with its ID as the key
 		return b.Put(itob(bug.ID), encoded)
 	})
 }
@@ -235,7 +215,6 @@ func CleanupTestDB() error {
 	}
 
 	err := db.Update(func(tx *bbolt.Tx) error {
-		// Delete all data from all buckets
 		if err := tx.DeleteBucket(bugsBucket); err != nil {
 			return err
 		}
@@ -246,7 +225,6 @@ func CleanupTestDB() error {
 			return err
 		}
 
-		// Recreate empty buckets
 		if _, err := tx.CreateBucket(bugsBucket); err != nil {
 			return err
 		}
@@ -262,7 +240,6 @@ func CleanupTestDB() error {
 	return err
 }
 
-// Add this new function
 func DeleteAllBugs() (int, error) {
 	var count int
 	err := db.Update(func(tx *bbolt.Tx) error {
@@ -271,10 +248,8 @@ func DeleteAllBugs() (int, error) {
 			count = 0
 			return nil
 		}
-		// Count number of bugs before deletion
 		count = b.Stats().KeyN
 
-		// Delete the bugs bucket and recreate it
 		if err := tx.DeleteBucket(bugsBucket); err != nil {
 			return fmt.Errorf("delete bugs bucket: %w", err)
 		}
@@ -283,7 +258,6 @@ func DeleteAllBugs() (int, error) {
 			return fmt.Errorf("create bugs bucket: %w", err)
 		}
 
-		// Reset the bug ID counter
 		c := tx.Bucket(counterBucket)
 		if err := c.Put([]byte("lastBugID"), itob(0)); err != nil {
 			return fmt.Errorf("reset bug counter: %w", err)

@@ -57,7 +57,6 @@ func CleanupTestDB() error {
 }
 
 func init() {
-	// Cleanup on program exit
 	if os.Getenv("TEST_MODE") != "" {
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt, syscall.SIGTERM)

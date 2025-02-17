@@ -19,7 +19,6 @@ func TestCreateComment(t *testing.T) {
 	cleanup := setupTestDB(t)
 	defer cleanup()
 
-	// Create a test bug first
 	bug := &models.Bug{
 		Title:       "Test Bug",
 		Description: "Test Description",
@@ -113,7 +112,6 @@ func TestGetComments(t *testing.T) {
 	cleanup := setupTestDB(t)
 	defer cleanup()
 
-	// Create a test bug first
 	bug := &models.Bug{
 		Title:       "Test Bug",
 		Description: "Test Description",
@@ -121,7 +119,6 @@ func TestGetComments(t *testing.T) {
 	err := db.CreateBug(bug)
 	assert.NoError(t, err)
 
-	// Create some test comments
 	testComments := []*models.Comment{
 		{Author: "User1", Content: "Comment 1"},
 		{Author: "User2", Content: "Comment 2"},
