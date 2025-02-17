@@ -23,7 +23,6 @@ func GetComments(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Getting comments for bug %s", id)
 
-	// Validate bug ID format
 	if _, err := strconv.Atoi(id); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{
@@ -57,7 +56,6 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Creating comment for bug %s", id)
 
-	// Validate bug ID format
 	if _, err := strconv.Atoi(id); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{
@@ -75,7 +73,6 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate request
 	if err := req.Validate(); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{

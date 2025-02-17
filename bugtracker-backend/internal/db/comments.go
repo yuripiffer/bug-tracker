@@ -20,7 +20,6 @@ func CreateComment(bugID string, comment *models.Comment) error {
 		return fmt.Errorf("invalid bug ID format")
 	}
 
-	// Verify bug exists
 	_, err = GetBug(comment.BugID)
 	if err != nil {
 		return fmt.Errorf("bug not found")
@@ -43,7 +42,6 @@ func GetComments(bugID string) ([]models.Comment, error) {
 		return nil, fmt.Errorf("invalid bug ID format")
 	}
 
-	// Verify bug exists
 	_, err = GetBug(bugIDInt)
 	if err != nil {
 		return nil, fmt.Errorf("bug not found")

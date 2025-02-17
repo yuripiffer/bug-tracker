@@ -120,7 +120,6 @@ func UpdateBug(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	// Convert string ID to int
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -139,7 +138,6 @@ func UpdateBug(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Retrieve existing bug
 	existingBug, err := db.GetBug(idInt)
 	if err != nil {
 		status := http.StatusInternalServerError
@@ -153,7 +151,6 @@ func UpdateBug(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update fields
 	existingBug.Title = req.Title
 	existingBug.Description = req.Description
 	existingBug.Status = req.Status
