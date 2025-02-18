@@ -3,7 +3,6 @@ import userEvent from "@testing-library/user-event";
 import CommentSection from "./CommentSection";
 import { Comment } from "@/types/comment";
 
-// Mock the fetch function
 global.fetch = jest.fn();
 
 describe("CommentSection", () => {
@@ -111,7 +110,6 @@ describe("CommentSection", () => {
   });
 
   it("should display the correct timestamp for each comment", () => {
-    // Mock the timezone to ensure consistent date formatting
     jest.useFakeTimers();
     jest.setSystemTime(new Date("2023-06-10T11:00:00.000Z"));
 
@@ -123,7 +121,6 @@ describe("CommentSection", () => {
       />
     );
 
-    // Use a more flexible matcher that doesn't depend on exact time format
     expect(screen.getByText(/6\/10\/23.*(10|11):00:00/)).toBeInTheDocument();
 
     jest.useRealTimers();

@@ -11,15 +11,12 @@ import BugList from "./BugList";
 import { getBugs, createBug, updateBug, deleteBug } from "../api/bugs";
 import { APP_VERSION } from "../config/app";
 
-// Mock next/router
 jest.mock("next/router", () => ({
   useRouter: jest.fn(),
 }));
 
-// Mock the API calls
 jest.mock("../api/bugs");
 
-// Mock next/link
 jest.mock("next/link", () => ({
   __esModule: true,
   default: ({
@@ -31,7 +28,6 @@ jest.mock("next/link", () => ({
   }) => <a href={href}>{children}</a>,
 }));
 
-// Mock next/image
 jest.mock("next/image", () => ({
   __esModule: true,
   default: ({
@@ -76,14 +72,11 @@ describe("BugList", () => {
   });
 
   const renderAndWaitForData = async () => {
-    // Ensure mock data is set
     (getBugs as jest.Mock).mockResolvedValue(mockBugs);
     const result = render(<BugList />);
 
-    // Wait for data to be loaded
     await waitFor(() => {
       expect(screen.getByText("All Bugs")).toBeInTheDocument();
-      // Verify bugs are rendered
       expect(screen.getByText("Bug 1")).toBeInTheDocument();
     });
     return result;
@@ -155,7 +148,6 @@ describe("BugList", () => {
     });
 
     it("should handle editing a bug", async () => {
-      // Wait for bugs to be rendered
       await waitFor(() => {
         expect(screen.getByText("Bug 1")).toBeInTheDocument();
       });
@@ -184,7 +176,6 @@ describe("BugList", () => {
       (deleteBug as jest.Mock).mockResolvedValue(undefined);
       (getBugs as jest.Mock).mockResolvedValue([mockBugs[1]]);
 
-      // Wait for bugs to be rendered
       await waitFor(() => {
         expect(screen.getByText("Bug 1")).toBeInTheDocument();
       });
@@ -196,11 +187,9 @@ describe("BugList", () => {
         fireEvent.click(deleteButtons[0]);
       });
 
-      // Wait for and click the confirm button in the delete modal
       await act(async () => {
-        // Get the Delete button from the confirmation modal
         const buttons = screen.getAllByRole("button", { name: /delete/i });
-        const confirmButton = buttons[buttons.length - 1]; // Get the last Delete button (the one in the modal)
+        const confirmButton = buttons[buttons.length - 1];
         fireEvent.click(confirmButton);
       });
 
@@ -255,7 +244,6 @@ describe("BugList", () => {
   it("displays the correct version number", () => {
     render(<BugList />);
 
-    // Check if the version is displayed with the 'v' prefix
     expect(screen.getByText(`v${APP_VERSION}`)).toBeInTheDocument();
   });
 
@@ -265,7 +253,6 @@ describe("BugList", () => {
     const header = screen.getByRole("navigation");
     const versionElement = screen.getByText(`v${APP_VERSION}`);
 
-    // Check if the version number is inside the header
     expect(header).toContainElement(versionElement);
   });
 });
