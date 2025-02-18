@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
 
-// Store bug ID for use across tests
 let testBugId: number;
 
 test("Call Health Check", async ({ request }) => {
@@ -31,10 +30,8 @@ test("Create a bug", async ({ request }) => {
   expect(response.ok()).toBeTruthy();
   const bug = await response.json();
 
-  // Store bug ID for later tests
   testBugId = bug.id;
 
-  // Verify the response structure
   expect(bug).toMatchObject({
     id: expect.any(Number),
     title: newBug.title,
@@ -62,7 +59,6 @@ test("Update a bug", async ({ request }) => {
   expect(response.ok()).toBeTruthy();
   const bug = await response.json();
 
-  // Verify the response structure
   expect(bug).toMatchObject({
     id: testBugId,
     title: updatedBug.title,
@@ -80,11 +76,10 @@ test("Get a specific bug", async ({ request }) => {
   expect(response.ok()).toBeTruthy();
   const bug = await response.json();
 
-  // Verify we got the correct bug
   expect(bug.id).toBe(testBugId);
   expect(bug).toMatchObject({
     id: testBugId,
-    title: expect.stringContaining("Updated Bug"), // From previous test
+    title: expect.stringContaining("Updated Bug"),
     description: "This bug was updated by Playwright",
     status: "In Progress",
     priority: "High",
@@ -94,11 +89,9 @@ test("Get a specific bug", async ({ request }) => {
 });
 
 test("Delete a bug", async ({ request }) => {
-  // Delete the bug
   const deleteResponse = await request.delete(`bugs/${testBugId}`);
   expect(deleteResponse.ok()).toBeTruthy();
 
-  // Verify the bug is deleted by trying to get it
   const getResponse = await request.get(`bugs/${testBugId}`);
   expect(getResponse.status()).toBe(404);
 });
