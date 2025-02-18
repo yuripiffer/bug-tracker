@@ -30,9 +30,8 @@ export default function AddBugModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate required fields
     if (!formData.title.trim() || !formData.description.trim()) {
-      return; // Don't submit if required fields are empty
+      return;
     }
 
     onSubmit(formData);
