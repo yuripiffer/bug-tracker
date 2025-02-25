@@ -135,7 +135,7 @@ jobs:
         working-directory: ./tests-api
         run: |
           npm ci
-          npm run test:ci
+          npx playwright test
 
       - name: Run E2E Tests
         working-directory: ./tests-e2e

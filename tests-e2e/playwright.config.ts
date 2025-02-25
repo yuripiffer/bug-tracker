@@ -16,12 +16,5 @@ export default defineConfig({
     ["list"],
     ["junit", { outputFile: "test-results/results.xml" }],
     ["html", { outputFolder: "playwright-report" }],
-  ],
-  webServer: process.env.CI
-    ? undefined
-    : {
-        command: "npm run dev",
-        url: "http://localhost:3000",
-        reuseExistingServer: !process.env.CI,
-      },
+  ]
 });
