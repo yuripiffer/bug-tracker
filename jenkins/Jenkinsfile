@@ -9,11 +9,11 @@ pipeline {
                     reuseNode true
                 }
             }
-        }
-        steps {
-           dir('bugtracker-backend') {
-               sh 'go test -v ./...'
-           }
+            steps {
+               dir('bugtracker-backend') {
+                   sh 'go test -v ./...'
+               }
+            }
         }
     }
 }
