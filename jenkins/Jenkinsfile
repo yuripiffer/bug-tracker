@@ -1,22 +1,59 @@
 pipeline {
     agent any
 
+    environment {
+        GO_VERSION = "1.21"
+        GOPATH = "${WORKSPACE}/go"
+        PATH = "${GOPATH}/bin:/usr/local/go/bin:${env.PATH}"
+    }
+
+    options {
+        timestamps()
+        ansiColor('xterm')
+    }
+
     stages {
-        stage('Unit Tests - Backend') {
-            agent {
-                docker {
-                    image 'snakee/golang-junit:1.21'
-                    reuseNode true
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Setup Go') {
+            steps {
+                sh """
+                    echo "Using Go version: ${GO_VERSION}"
+                    wget https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz -O /tmp/go.tar.gz
+                    sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf /tmp/go.tar.gz
+                    go version
+                """
+            }
+        }
+
+        stage('Dependencies') {
+            steps {
+                sh 'go mod tidy'
+            }
+        }
+
+        stage('Unit Tests') {
+            steps {
+                sh 'go test ./... -v -coverprofile=coverage.out'
+            }
+            post {
+                always {
+                    junit '**/TEST-*.xml' allowEmptyResults: true
+                }
+                success {
+                    sh 'go tool cover -func=coverage.out'
                 }
             }
-            environment {
-                GOCACHE = "${WORKSPACE}/.gocache"
-            }
-            steps {
-               dir('bugtracker-backend') {
-                   sh 'go test -v ./...'
-               }
-            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
         }
     }
 }
